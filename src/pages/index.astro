@@ -1,0 +1,16 @@
+---
+import { getCollection, render } from "astro:content";
+import DocLayout from "../layouts/DocLayout.astro";
+
+/**
+ * Docs home = the "Introduction" entry, served at `/` directly (no redirect
+ * hop, no duplicate page — the [...slug] route skips this entry).
+ */
+const entry = (await getCollection("docs")).find((e) => e.id === "intro");
+if (!entry) throw new Error("src/content/docs/intro.md is missing");
+const { Content, headings } = await render(entry);
+---
+
+<DocLayout entry={entry} headings={headings}>
+  <Content />
+</DocLayout>

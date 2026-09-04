@@ -1,0 +1,31 @@
+---
+import { siteConfig } from "../config";
+import Header from "../components/Header.astro";
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page not found — {siteConfig.name}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="color-scheme" content="light dark" />
+  </head>
+  <body class="bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <Header />
+    <main class="mx-auto flex min-h-[50vh] max-w-7xl flex-col items-center justify-center gap-4 px-4 py-24 text-center">
+      <p class="text-sm font-semibold text-emerald-500">404</p>
+      <h1 class="text-3xl font-bold tracking-tight">This page went offline</h1>
+      <p class="max-w-md text-zinc-500 dark:text-zinc-400">
+        The page you are looking for was stopped, deleted, or never started.
+      </p>
+      <a
+        href="/"
+        class="mt-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+        >Back to the docs</a
+      >
+    </main>
+  </body>
+</html>

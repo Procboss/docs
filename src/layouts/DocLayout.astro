@@ -1,0 +1,84 @@
+---
+import type { CollectionEntry } from "astro:content";
+import type { MarkdownHeading } from "astro";
+import { siteConfig, contentBase } from "../config";
+import Header from "../components/Header.astro";
+import Sidebar from "../components/Sidebar.astro";
+import Toc from "../components/Toc.astro";
+import PrevNext from "../components/PrevNext.astro";
+import "../styles/global.css";
+
+interface Props {
+  entry: CollectionEntry<"docs">;
+  headings: MarkdownHeading[];
+}
+
+const { entry, headings } = Astro.props;
+const editUrl = `${siteConfig.links.docs}/edit/main/${contentBase}/${entry.id}.md`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{entry.data.title} — {siteConfig.name}</title>
+    <meta name="description" content={entry.data.description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:title" content={entry.data.title} />
+    <meta property="og:description" content={entry.data.description} />
+    <meta property="og:type" content="article" />
+  </head>
+  <body class="bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <Header />
+
+    <!-- mobile nav: a <details> element — zero JS, works everywhere -->
+    <div class="border-b border-zinc-200 lg:hidden dark:border-zinc-800">
+      <details>
+        <summary
+          class="mx-auto flex h-11 max-w-7xl cursor-pointer list-none items-center gap-2 px-4 text-sm text-zinc-500 sm:px-6 dark:text-zinc-400"
+        >
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path>
+          </svg>
+          Menu
+        </summary>
+        <div class="max-h-[70vh] overflow-y-auto border-t border-zinc-200 px-4 py-4 sm:px-6 dark:border-zinc-800">
+          <Sidebar />
+        </div>
+      </details>
+    </div>
+
+    <div class="mx-auto flex max-w-7xl gap-8 px-4 sm:px-6">
+      <!-- desktop sidebar -->
+      <aside class="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto py-8 lg:block">
+        <Sidebar />
+      </aside>
+
+      <main class="min-w-0 flex-1 py-8">
+        <article
+          class="prose prose-zinc dark:prose-invert prose-headings:scroll-mt-20 max-w-[52rem] prose-a:font-medium prose-a:text-emerald-600 prose-a:decoration-emerald-400/40 prose-a:underline-offset-2 dark:prose-a:text-emerald-400"
+        >
+          <slot />
+        </article>
+
+        <PrevNext />
+
+        <footer class="mt-6 border-t border-zinc-200 pt-4 text-sm text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
+          <a
+            href={editUrl}
+            class="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-600 dark:decoration-zinc-700 dark:hover:text-zinc-300"
+            rel="noopener noreferrer" target="_blank">Edit this page on GitHub</a
+          >
+        </footer>
+      </main>
+
+      <div class="hidden w-56 shrink-0 py-8 xl:block">
+        <Toc headings={headings} />
+      </div>
+    </div>
+  </body>
+</html>

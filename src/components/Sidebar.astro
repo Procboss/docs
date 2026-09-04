@@ -1,0 +1,44 @@
+---
+import { getCollection } from "astro:content";
+import { sections } from "../config";
+
+/** Ordered nav tree: sections from config, entries sorted by frontmatter order. */
+const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
+const groups = sections
+  .map((sec) => ({ ...sec, items: docs.filter((d) => d.data.section === sec.key) }))
+  .filter((g) => g.items.length > 0);
+
+const href = (id: string) => (id === "intro" ? "/" : `/${id}`);
+const current = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isActive = (id: string) => href(id) === current;
+---
+
+<nav aria-label="Docs navigation">
+  {
+    groups.map((group) => (
+      <div class="mb-6">
+        <p class="mb-1.5 px-3 text-xs font-semibold tracking-wide text-zinc-400 uppercase dark:text-zinc-500">
+          {group.label}
+        </p>
+        <ul>
+          {group.items.map((entry) => (
+            <li>
+              <a
+                href={href(entry.id)}
+                aria-current={isActive(entry.id) ? "page" : undefined}
+                class:list={[
+                  "block rounded-md px-3 py-1.5 text-sm transition-colors",
+                  isActive(entry.id)
+                    ? "bg-emerald-50 font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100",
+                ]}
+              >
+                {entry.data.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</nav>

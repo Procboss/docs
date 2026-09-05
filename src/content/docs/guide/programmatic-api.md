@@ -166,11 +166,41 @@ const pm = new ProcessManager();
 const states = await pm.start({
   name: "my-api",
   script: "./server.ts",
+  instances: 4,
+  execMode: "cluster",
+  port: 3000,
+  env: { NODE_ENV: "production" },
+  maxMemoryRestart: "512M",
+  healthCheckUrl: "http://localhost:3000/health",
 });
 
-// All the same lifecycle operations are available
-await pm.stop("my-api");
-const list = await pm.list();
+console.log("Started:", states.map((s) => `${s.name} (pid: ${s.pid})`));
+
+// List processes
+const list = pm.list();
+
+// Get metrics
+const metrics = await pm.getMetrics();
+
+// Scale
+await pm.scale("my-api", 8);
+
+// Graceful reload
+await pm.reload("my-api");
+
+// Start the web dashboard
+const dashboard = new Dashboard(pm);
+dashboard.start(9615, 9616);
+
+// Get Prometheus-format metrics
+const promText = pm.getPrometheusMetrics();
+
+// Save and restore
+await pm.save();
+await pm.resurrect();
+
+// Stop everything
+await pm.stopAll();
 ```
 
-This is also the object [modules](/cli/modules) receive in their `init` hook.
+The `ProcessManager` provides the same process management capabilities but runs in-process rather than communicating with a daemon. Use the `PBoss` client class for the standard daemon-based workflow, and `ProcessManager` when you need direct, embedded control. It's also the object [modules](/cli/modules) receive in their `init` hook.

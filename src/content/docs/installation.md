@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install pboss with the one-line installer, Homebrew, Snap, or Bun; or build the standalone binary from source. Requirements and updates.
+description: Install pboss with the one-line installer (from the repo's scripts), Homebrew, Snap, or Bun; or build the standalone binary from source. Requirements and updates.
 section: getting-started
 order: 2
 ---
@@ -33,19 +33,19 @@ Installs and compiles the native standalone `pboss` executable directly on your 
 **Linux / macOS:**
 
 ```bash
-curl -fsSL https://procboss.com/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Procboss/pboss/refs/heads/main/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-powershell -c "irm https://procboss.com/install.ps1 | iex"
+powershell -c "irm https://raw.githubusercontent.com/Procboss/pboss/refs/heads/main/scripts/install.ps1 | iex"
 ```
 
 **Windows (Command Prompt):**
 
 ```cmd
-curl -fsSL https://procboss.com/install.cmd | cmd
+curl -fsSL https://raw.githubusercontent.com/Procboss/pboss/refs/heads/main/scripts/install.cmd | cmd
 ```
 
 ### Package managers
@@ -93,7 +93,7 @@ The update path depends on how you installed:
 
 | Method | Update command |
 |---|---|
-| One-line installer | re-run `curl -fsSL https://procboss.com/install.sh \| bash` |
+| One-line installer | re-run the same `curl …/scripts/install.sh \| bash` command |
 | Homebrew | `brew upgrade procboss/tap/pboss` |
 | Snap | `sudo snap refresh pboss` |
 | Bun global | `bun update -g pboss` |

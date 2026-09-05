@@ -2,7 +2,7 @@
 title: Troubleshooting
 description: Fixes for common pboss problems — daemon won't start, restart loops, memory, port conflicts, log growth, dashboard access, and containers that exit.
 section: more
-order: 1
+order: 3
 ---
 
 Quick fixes for the most common issues. If your case isn't here, the [pboss repo](https://github.com/Procboss/pboss/issues) takes bug reports with the output of `pboss describe <name>` and `pboss logs <name> --err`.

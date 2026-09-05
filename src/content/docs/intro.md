@@ -32,6 +32,8 @@ pboss replaces complex, heavyweight process managers with a clean, ultra-fast ar
 - **Persistence** — `pboss save` + `pboss startup` keeps your apps alive across daemon restarts and system reboots.
 - **Remote deployment** — SSH-based deploys with git pull, release directories, symlink rotation, and pre/post hooks.
 - **Environment management** — store, retrieve, and inject environment variables per process, with `.env` file support.
+- **Module system** — extend pboss with plugins that hook into the process manager lifecycle.
+- **IPC architecture** — a daemonized design where the CLI talks to a single machine-level daemon over WebSocket on a Unix socket.
 
 ## pboss vs ProcBoss Cloud
 
@@ -50,5 +52,7 @@ The CLI is the same tool in both cases. The cloud layer only adds visibility: wh
 - New to pboss? Start with [Installation](/installation), then the [Quickstart](/quickstart).
 - Not running Bun? Read [Languages & runtimes](/runtimes) — pboss manages Go, Python, Java, and more.
 - Running processes in production? Read [Foreground mode & Docker](/guide/docker) and [Startup scripts](/cli/startup).
+- Curious how it works inside? Read [Architecture](/architecture).
+- Want cookbook patterns? Browse [Recipes](/recipes).
 - Want the fleet dashboard? Jump to [ProcBoss Cloud](/cloud).
 - Looking for a specific command? Browse the [CLI reference](/cli/processes).

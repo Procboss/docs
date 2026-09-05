@@ -2,7 +2,7 @@
 
 Documentation site for [pboss](https://github.com/Procboss/pboss) (the open-source universal process manager) and [ProcBoss Cloud](https://procboss.com).
 
-Built with **Astro 5 + Tailwind CSS 4**, fully static — 25 HTML pages, **zero client-side JavaScript**, ~900KB of output. Dark/light mode via `prefers-color-scheme` with build-time dual-theme syntax highlighting (Shiki). Hosted on **Cloudflare Pages**.
+Built with **Astro 5 + Tailwind CSS 4**, fully static — 27 HTML pages, **zero client-side JavaScript**. Dark/light mode via `prefers-color-scheme` with build-time dual-theme syntax highlighting (Shiki). Hosted on **Cloudflare Pages**.
 
 ## Stack
 
@@ -28,6 +28,8 @@ src/
 │   ├── guide/              # docker, config, dashboard-api, prometheus,
 │   │                       # programmatic-api
 │   ├── cloud/              # link-server, agent-api (+ cloud.md at top level)
+│   ├── architecture.md     # how the CLI/daemon/containers fit together
+│   ├── recipes.md          # cookbook: prod, watch, cron, deploys, code
 │   └── troubleshooting.md
 ├── layouts/DocLayout.astro # header + sidebar + prose + TOC + prev/next
 ├── components/             # Header, Sidebar, Toc, PrevNext

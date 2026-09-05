@@ -77,7 +77,7 @@ Point your custom domain (e.g. `docs.procboss.com`) at the Pages project — `si
 
 ## Content sources
 
-CLI reference content is derived from the [pboss README](https://github.com/Procboss/pboss) (v1.1.0) and kept in sync manually — when pboss gains flags or commands, update the matching page under `src/content/docs/cli/`. Cloud pages document the `pboss login` device flow and agent API implemented on procboss.com.
+CLI reference content is derived from [pboss DOCS.md](https://github.com/Procboss/pboss/blob/main/DOCS.md) (the full manual previously shipped as the README — the README is now a short intro that points here) and kept in sync manually — when pboss gains flags or commands, update the matching page under `src/content/docs/cli/`. Cloud pages document the `pboss login` device flow and agent API implemented on procboss.com. This site at **docs.procboss.com** is the canonical home for all ProcBoss documentation.
 
 ## License
 

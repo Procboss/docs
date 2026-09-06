@@ -1,0 +1,114 @@
+---
+/**
+ * Progressive enhancements, inlined at the end of <body>:
+ *
+ *  - Wires up theme toggle buttons (`[data-theme-toggle]`, see Header.astro)
+ *    and persists the choice in localStorage. While the visitor has not
+ *    made an explicit choice, the site keeps following OS theme changes.
+ *
+ *  - Wraps every Shiki code block (`pre.astro-code`) in a `.code-block`
+ *    div and appends a copy button that copies the block's code text.
+ *
+ * Everything is plain inline JS (~1.5 KB) — no framework, no external
+ * file. The site remains fully readable without JavaScript; these only
+ * add convenience.
+ */
+---
+
+<script is:inline>
+  (() => {
+    /* ---------------- theme toggle ---------------- */
+
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const storedTheme = () => {
+      try {
+        return localStorage.getItem("theme");
+      } catch {
+        return null;
+      }
+    };
+
+    document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const dark = !document.documentElement.classList.contains("dark");
+        document.documentElement.classList.toggle("dark", dark);
+        try {
+          localStorage.setItem("theme", dark ? "dark" : "light");
+        } catch {}
+      });
+    });
+
+    /* follow OS-level changes only while no explicit choice is stored */
+    const onSchemeChange = (e) => {
+      if (!storedTheme()) {
+        document.documentElement.classList.toggle("dark", e.matches);
+      }
+    };
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", onSchemeChange);
+    } else if (typeof mq.addListener === "function") {
+      mq.addListener("change", onSchemeChange);
+    }
+
+    /* ---------------- copy buttons on code blocks ---------------- */
+
+    const ICON =
+      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+    const CHECK =
+      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
+    const LABEL_COPY = "<span>Copy</span>";
+    const LABEL_COPIED = "<span>Copied</span>";
+
+    const writeClipboard = async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        /* fallback for non-secure contexts / older browsers */
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "");
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand("copy");
+          ta.remove();
+          return ok;
+        } catch {
+          return false;
+        }
+      }
+    };
+
+    document.querySelectorAll("pre.astro-code").forEach((pre) => {
+      /* capture the code text BEFORE any button exists inside */
+      const text = (pre.querySelector("code") ?? pre).innerText;
+
+      /* wrapper keeps the button pinned while the <pre> scrolls */
+      const wrapper = document.createElement("div");
+      wrapper.className = "code-block";
+      pre.replaceWith(wrapper);
+      wrapper.appendChild(pre);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "copy-button";
+      btn.setAttribute("aria-label", "Copy code to clipboard");
+      btn.innerHTML = ICON + LABEL_COPY;
+      btn.addEventListener("click", async () => {
+        const ok = await writeClipboard(text);
+        btn.innerHTML = (ok ? CHECK : ICON) + (ok ? LABEL_COPIED : LABEL_COPY);
+        if (ok) {
+          btn.setAttribute("data-copied", "");
+          setTimeout(() => {
+            btn.removeAttribute("data-copied");
+            btn.innerHTML = ICON + LABEL_COPY;
+          }, 1600);
+        }
+      });
+      wrapper.appendChild(btn);
+    });
+  })();
+</script>

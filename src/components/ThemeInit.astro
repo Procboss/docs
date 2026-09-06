@@ -1,0 +1,23 @@
+---
+/**
+ * Theme bootstrap — must run synchronously inside <head>, before first
+ * paint, so the page never flashes the wrong theme. Inline (no external
+ * file, no request): resolve the visitor's stored choice, else fall back
+ * to the system preference, and put `.dark` on <html> accordingly.
+ * Include in <head> of every page that renders the Header.
+ */
+---
+
+<script is:inline>
+  (() => {
+    let stored = null;
+    try {
+      stored = localStorage.getItem("theme");
+    } catch {}
+    const dark =
+      stored === "dark" ||
+      (stored !== "light" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", dark);
+  })();
+</script>

@@ -2,7 +2,7 @@
 
 Documentation site for [pboss](https://github.com/Procboss/pboss) (the open-source universal process manager) and [ProcBoss Cloud](https://procboss.com).
 
-Built with **Astro 5 + Tailwind CSS 4**, fully static — 27 HTML pages, **zero client-side JavaScript**. Dark/light mode via `prefers-color-scheme` with build-time dual-theme syntax highlighting (Shiki). Hosted on **Cloudflare Pages**.
+Built with **Astro 5 + Tailwind CSS 4**, fully static — 27 HTML pages with only ~1.5 KB of inline progressive-enhancement JavaScript (a dark/light theme switch and copy buttons on code blocks — no framework, no external JS files, site fully readable without JS). Dark/light mode defaults to the system preference, persists the visitor's choice in `localStorage`, and pairs with build-time dual-theme syntax highlighting (Shiki). Hosted on **Cloudflare Pages**.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Built with **Astro 5 + Tailwind CSS 4**, fully static — 27 HTML pages, **zero 
 | Styling | Tailwind CSS 4 (Vite plugin) + typography plugin |
 | Syntax highlighting | Shiki, dual themes (`github-light` / `github-dark`) switched by CSS custom properties |
 | Search | — (nav-first structure; add Pagefind later if needed) |
-| JS shipped | 0 bytes. Mobile nav is a `<details>` element; TOC is plain anchors |
+| JS shipped | ~1.5 KB inline: theme toggle + code copy buttons. Mobile nav is a `<details>` element; TOC is plain anchors |
 
 ## Repository layout
 
@@ -32,7 +32,9 @@ src/
 │   ├── recipes.md          # cookbook: prod, watch, cron, deploys, code
 │   └── troubleshooting.md
 ├── layouts/DocLayout.astro # header + sidebar + prose + TOC + prev/next
-├── components/             # Header, Sidebar, Toc, PrevNext
+├── components/             # Header, Sidebar, Toc, PrevNext,
+│                          # ThemeInit (no-flash theme bootstrap),
+│                          # ClientEnhancements (toggle + copy buttons)
 └── styles/global.css       # Tailwind + shiki dual-theme + prose tweaks
 astro.config.mjs            # + custom rehype anchor plugin (github-slugger)
 ```

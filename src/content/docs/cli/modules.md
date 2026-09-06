@@ -2,7 +2,7 @@
 title: Modules
 description: Extend pboss with modules — install from git, a local path, or npm, and write your own with the PBossModule interface.
 section: cli
-order: 10
+order: 11
 ---
 
 pboss supports a plugin system for extending functionality.

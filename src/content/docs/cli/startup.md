@@ -2,7 +2,7 @@
 title: Startup scripts
 description: pboss startup, save, and resurrect — generate systemd, launchd, or Task Scheduler services so your processes survive reboots.
 section: cli
-order: 9
+order: 10
 ---
 
 pboss can generate and install OS-level services so the daemon starts at boot — and, combined with `save`, automatically resurrects your process list after the reboot.

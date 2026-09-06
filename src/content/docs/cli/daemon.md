@@ -2,7 +2,7 @@
 title: Daemon control
 description: pboss ping and pboss kill — check daemon health, stop everything, and how the CLI talks to the daemon.
 section: cli
-order: 11
+order: 12
 ---
 
 pboss uses a daemonized architecture: the CLI communicates with a long-running daemon process over a Unix domain socket using the WebSocket protocol. Most commands need the daemon — and it's started on demand if it isn't running.

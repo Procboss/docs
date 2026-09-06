@@ -14,9 +14,16 @@ The ecosystem file is a JSON or TypeScript file with the following top-level str
 ```typescript
 interface EcosystemConfig {
   apps: StartOptions[];
+  crons?: CronJobConfig[];
   deploy?: Record<string, DeployConfig>;
 }
 ```
+
+| Top-level field | Type | Description |
+|---|---|---|
+| `apps` | `StartOptions[]` | Processes to run — the tables below document each entry |
+| `crons` | `CronJobConfig[]` | Standalone scheduled commands (friendly schedules like `everyday@9:11`) — see [Cron Jobs](/cli/cron) |
+| `deploy` | `Record<string, DeployConfig>` | Deployment environments — see [Deploy configuration](#deploy-configuration) |
 
 ## Process options
 

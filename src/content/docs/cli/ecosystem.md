@@ -130,7 +130,7 @@ Every field in the `apps` array mirrors a `pboss start` flag — the full mappin
 ```bash
 pboss start ecosystem.config.json
 pboss save
-pboss startup install
+sudo env PATH="$PATH" pboss startup
 ```
 
 On reboot, systemd / launchd / Task Scheduler starts the pboss daemon, and the daemon automatically resurrects your processes. See [Startup scripts](/cli/startup).

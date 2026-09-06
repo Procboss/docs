@@ -32,7 +32,7 @@ This is the "everything off" switch: every managed process is stopped, then the 
 - **On-demand startup** — the first command that needs the daemon spawns it (under 50ms start, ~12MB RAM).
 - **One daemon per machine** — all CLI invocations, the dashboard, and the metrics endpoint talk to the same daemon over its Unix socket.
 - **Foreground exception** — `--no-daemon` skips all of this and supervises in-process; see [Foreground mode](/guide/docker).
-- **Reboots** — pair `pboss save` with `pboss startup install` and the OS service starts the daemon at boot, which resurrects your saved processes; see [Startup scripts](/cli/startup).
+- **Reboots** — pair `pboss save` with `pboss startup` (sudo on Linux) and the OS service starts the daemon at boot, which resurrects your saved processes; see [Startup scripts](/cli/startup).
 
 ## Troubleshooting
 

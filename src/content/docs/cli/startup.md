@@ -5,48 +5,46 @@ section: cli
 order: 10
 ---
 
-pboss can generate and install OS-level services so the daemon starts at boot — and, combined with `save`, automatically resurrects your process list after the reboot.
+pboss installs an OS-level service so the daemon starts at boot — and, combined with `save`, automatically resurrects your process list after the reboot.
 
 ## pboss startup
 
-Generate and display a startup script for your operating system:
+Installs the boot startup service directly — no `install` subcommand needed:
 
-- **Linux:** a `systemd` service unit file (`/etc/systemd/system/pboss.service`).
-- **macOS:** a `launchd` plist (`~/Library/LaunchAgents/com.pboss.daemon.plist`).
-- **Windows:** a Windows Task Scheduler command (`schtasks`) and PowerShell task configuration.
+- **Linux:** writes and enables a `systemd` service unit (`/etc/systemd/system/pboss.service`). Requires root — when run without sudo, pboss exits with the exact command to re-run, `sudo env PATH="$PATH" pboss startup`. The env form keeps your PATH visible to sudo, so it finds pboss even in per-user locations like `~/.bun/bin` (plain `sudo pboss` cannot see those directories).
+- **macOS:** writes and loads a `launchd` plist (`~/Library/LaunchAgents/com.pboss.daemon.plist`). No root needed.
+- **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) that starts the daemon at logon with highest privileges. Requires an elevated shell (Run as Administrator) — pboss checks and tells you when the shell is not elevated.
 
 ```bash
+# Linux (script installs — keeps your PATH visible to sudo)
+sudo env PATH="$PATH" pboss startup
+
+# Linux (compiled one-line install — pboss is already system-wide)
+sudo pboss startup
+
+# macOS / Windows (elevated shell)
 pboss startup
 ```
 
-The generated script detects how pboss was installed and adapts the daemon command accordingly. On a **compiled standalone install** (one-line installer, `build:bin`) the service re-executes the pboss binary itself — `ExecStart=/usr/local/bin/pboss __daemon` — because the Bun runtime is embedded in the binary and is not required on the system. On a **script install** (`bun add -g pboss`, npm) the service runs the source on the system Bun runtime — `ExecStart=/usr/local/bin/bun run …/daemon.ts`. The generated file's header comment states which mode was detected.
+When installed with sudo on Linux/macOS, the generated service runs as the **invoking user** (resolved from `SUDO_USER`), not as root — the boot daemon then uses the same `~/.pboss` data as your daily `pboss` commands instead of silently splitting off into `/root/.pboss`.
 
-On Windows you can also specify the platform explicitly:
+The generated file detects how pboss was installed and adapts the daemon command accordingly. On a **compiled standalone install** (one-line installer, `build:bin`) the service re-executes the pboss binary itself — `ExecStart=/usr/local/bin/pboss __daemon` — because the Bun runtime is embedded in the binary and is not required on the system. On a **script install** (`bun add -g pboss`, npm) the service runs the source on the system Bun runtime — `ExecStart=/usr/local/bin/bun run …/daemon.ts`. The generated file's header comment states which mode was detected.
 
-```powershell
-pboss startup win32
-```
+## pboss startup generate
 
-## pboss startup install
-
-Automatically install the startup script so the pboss daemon starts at boot / logon:
+Print the service config for review (or to install by hand) without touching the system:
 
 ```bash
-# Linux (sudo) / macOS
-pboss startup install
-
-# Windows (Command Prompt / PowerShell as Administrator)
-pboss startup install
+pboss startup generate
+pboss startup generate win32   # generate for another OS
 ```
 
-On Windows, this registers a Scheduled Task (`PBOSS_Daemon`) configured to start automatically on user logon with highest privileges.
+## pboss startup remove
 
-## pboss startup uninstall
-
-Remove the startup service / scheduled task:
+Remove the installed startup service / scheduled task (root on Linux):
 
 ```bash
-pboss startup uninstall
+sudo env PATH="$PATH" pboss startup remove
 ```
 
 ## pboss save
@@ -70,9 +68,9 @@ pboss resurrect
 ```bash
 pboss start ecosystem.config.json
 pboss save
-pboss startup install
+sudo env PATH="$PATH" pboss startup
 ```
 
-On reboot, systemd, launchd, or Task Scheduler starts the pboss daemon, and the daemon automatically runs resurrect to restore your processes.
+On reboot, systemd, launchd, or Task Scheduler starts the pboss daemon, and the daemon automatically runs resurrect to restore your processes. (On macOS drop the sudo — LaunchAgents are per-user; on a compiled one-line install, plain `sudo pboss startup` is enough.)
 
 > **Tip:** After changing your process list (adding, removing, or renaming apps), run `pboss save` again — resurrection restores whatever was last saved.

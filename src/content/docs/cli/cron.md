@@ -1,6 +1,6 @@
 ---
 title: Cron Jobs
-description: Schedule standalone commands with friendly syntax — everyday@9:11, every-sunday, today@23:10, onDate — or raw cron expressions. Persisted across reboots.
+description: Schedule standalone commands with friendly syntax — everyday@9:11, every-second, every-sunday, today@23:10, on-date — or raw cron expressions. Persisted across reboots.
 section: cli
 order: 9
 ---
@@ -20,7 +20,7 @@ pboss cron run every-sunday@10:10 "sh /srv/cleanup.sh" --name cleanup
 ```
 
 ```bash
-pboss cron run onDate@24-10-2026-23:10 "node migrate.js"
+pboss cron run on-date@24-10-2026-23:10 "node migrate.js"
 ```
 
 ## The schedule grammar
@@ -33,6 +33,8 @@ Times use the 24-hour clock; dates are **day-month-year** (`24-10-2026` = Octobe
 | `everyday@10` | every day at 10:00 |
 | `everyday@9:11` | every day at 09:11 |
 | `everyday@24:30` | every day at 00:30 (`24:xx` = the next day) |
+| `everysecond` | every second |
+| `every-15-seconds` | every 15 seconds (1–59) |
 | `everyhour` / `everyhour@30` | every hour at :00 / :30 |
 | `everyminute` | every minute |
 | `everyweek` / `everyweek@10:10` | every Sunday |
@@ -44,17 +46,19 @@ Times use the 24-hour clock; dates are **day-month-year** (`24-10-2026` = Octobe
 | `every-2-days` / `every-2-days@8` | every 2nd day |
 | `today@23:10` | once, today (must be in the future) |
 | `tomorrow@8:00` | once, tomorrow |
-| `onDate@24-10-2026` | once, 24 Oct 2026 at 00:00 |
-| `onDate@24-10-2026-23:10` | once, 24 Oct 2026 at 23:10 |
+| `on-date@24-10-2026` | once, 24 Oct 2026 at 00:00 |
+| `on-date@24-10-2026-23:10` | once, 24 Oct 2026 at 23:10 |
 | `"*/5 * * * *"` | raw 5-field cron expression (escape hatch) |
+| `"*/10 * * * * *"` | raw 6-field cron — first field is seconds |
 
 Notes:
 
 - Hour **24** is accepted and means "the following day": `24:30` is `00:30` the next day.
-- Dates are calendar-validated (leap years included) — `onDate@31-02-2026` is rejected with a clear error.
-- Next-run times are computed by the mature [cron-parser](https://www.npmjs.com/package/cron-parser) library, which also validates raw cron expressions.
+- Dates are calendar-validated (leap years included) — `on-date@31-02-2026` is rejected with a clear error.
+- Keywords tolerate hyphens, underscores and camelCase: `on-date@`, `onDate@` and `on_date@` are the same word; so are `every-second` and `everySecond`.
+- Next-run times are computed by the mature [cron-parser](https://www.npmjs.com/package/cron-parser) library, which also validates raw cron expressions — 6-field ones get a seconds field.
 - Jobs missed while the machine or daemon was down are **skipped** (like classic cron), not back-filled; recurring jobs reschedule to their next future occurrence.
-- If a time has already passed for `today@…` or `onDate@…`, pboss rejects it with a suggestion instead of scheduling a job that never fires.
+- If a time has already passed for `today@…` or `on-date@…`, pboss rejects it with a suggestion instead of scheduling a job that never fires.
 
 Options for `cron run`:
 
@@ -75,7 +79,7 @@ pboss cron list
 ├────┼─────────┼─────────────┼──────────────────┼───────────────────────────┼──────┼──────┼──────────┤
 │  1 │ backup  │ everyday@9  │ bun backup.ts    │ 2026-09-07 09:00 Mon      │   14 │ ✓    │ ● online │
 │  2 │ cleanup │ every-sunday│ sh cleanup.sh    │ 2026-09-13 00:00 Sun      │    3 │ ✓    │ ● online │
-│  3 │ migrate │ onDate@24-10-2026-23:10 │ node migrate.js │ 2026-10-24 23:10 │  0 │ -    │ ● done   │
+│  3 │ migrate │ on-date@24-10-2026-23:10 │ node migrate.js │ 2026-10-24 23:10 │  0 │ -    │ ● done   │
 └────┴─────────┴─────────────┴──────────────────┴───────────────────────────┴──────┴──────┴──────────┘
 ```
 

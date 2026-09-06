@@ -1,4 +1,115 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#09090b"/>
-  <path d="M17.5 4 8 18h6.5L13 28l10.5-15H17z" fill="#34d399"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 50 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Outer squircle gradient -->
+    <linearGradient id="outerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a4d52"/>
+      <stop offset="40%" stop-color="#2d3035"/>
+      <stop offset="100%" stop-color="#181a1d"/>
+    </linearGradient>
+
+    <!-- Inner recess gradient -->
+    <linearGradient id="innerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1f2125"/>
+      <stop offset="100%" stop-color="#121315"/>
+    </linearGradient>
+
+    <!-- Rack blade gradient -->
+    <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3c3f45"/>
+      <stop offset="100%" stop-color="#242629"/>
+    </linearGradient>
+
+    <!-- Central circle gradient -->
+    <linearGradient id="circleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3a3d42"/>
+      <stop offset="100%" stop-color="#1e2023"/>
+    </linearGradient>
+
+    <!-- Lightning bolt gradient -->
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffea00"/>
+      <stop offset="100%" stop-color="#ddaa00"/>
+    </linearGradient>
+
+    <!-- Green LED glow filter -->
+    <filter id="ledGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Main Dark Outer Squircle Shell -->
+  <rect x="50" y="50" width="400" height="400" rx="85" ry="85" fill="url(#outerGrad)" />
+
+  <!-- Inner Recessed Panel -->
+  <rect x="90" y="90" width="320" height="320" rx="45" ry="45" fill="url(#innerGrad)" stroke="#111214" stroke-width="3" />
+
+  <!-- Server Blades -->
+  <!-- Blade 1 -->
+  <g>
+    <rect x="110" y="110" width="280" height="58" rx="10" fill="url(#bladeGrad)" stroke="#1a1b1e" stroke-width="2"/>
+    <rect x="128" y="124" width="20" height="30" rx="3" fill="#121315"/>
+    <rect x="154" y="124" width="20" height="30" rx="3" fill="#121315"/>
+    <rect x="180" y="124" width="20" height="30" rx="3" fill="#121315"/>
+
+    <circle cx="310" cy="130" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+    <circle cx="328" cy="130" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+    <circle cx="346" cy="130" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+    <circle cx="364" cy="130" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+
+    <circle cx="310" cy="148" r="5" fill="#1a1b1d" stroke="#333" stroke-width="1.5"/>
+    <circle cx="328" cy="148" r="5" fill="#1a1b1d" stroke="#333" stroke-width="1.5"/>
+    <circle cx="346" cy="148" r="5" fill="#1a1b1d" stroke="#333" stroke-width="1.5"/>
+    <circle cx="364" cy="148" r="5" fill="#1a1b1d" stroke="#333" stroke-width="1.5"/>
+  </g>
+
+  <!-- Blade 2 -->
+  <g>
+    <rect x="110" y="178" width="280" height="58" rx="10" fill="url(#bladeGrad)" stroke="#1a1b1e" stroke-width="2"/>
+    <rect x="128" y="192" width="20" height="30" rx="3" fill="#121315"/>
+    <rect x="154" y="192" width="20" height="30" rx="3" fill="#121315"/>
+    <rect x="180" y="192" width="20" height="30" rx="3" fill="#121315"/>
+
+    <circle cx="328" cy="198" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+    <circle cx="346" cy="198" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+    <circle cx="364" cy="198" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+
+    <circle cx="328" cy="216" r="5" fill="#1a1b1d" stroke="#333" stroke-width="1.5"/>
+    <circle cx="346" cy="216" r="5" fill="#1a1b1d" stroke="#333" stroke-width="1.5"/>
+    <circle cx="364" cy="216" r="5" fill="#1a1b1d" stroke="#333" stroke-width="1.5"/>
+  </g>
+
+  <!-- Blade 3 -->
+  <g>
+    <rect x="110" y="246" width="280" height="58" rx="10" fill="url(#bladeGrad)" stroke="#1a1b1e" stroke-width="2"/>
+    <rect x="128" y="265" width="45" height="20" rx="3" fill="#121315"/>
+  </g>
+
+  <!-- Blade 4 -->
+  <g>
+    <rect x="110" y="314" width="280" height="58" rx="10" fill="url(#bladeGrad)" stroke="#1a1b1e" stroke-width="2"/>
+    <rect x="128" y="328" width="20" height="30" rx="3" fill="#121315"/>
+    <rect x="154" y="328" width="20" height="30" rx="3" fill="#121315"/>
+    <rect x="180" y="328" width="20" height="30" rx="3" fill="#121315"/>
+
+    <circle cx="328" cy="343" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+    <circle cx="346" cy="343" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+    <circle cx="364" cy="343" r="6" fill="#76ff03" filter="url(#ledGlow)"/>
+  </g>
+
+  <!-- Central Circular Emblem -->
+  <g>
+    <circle cx="250" cy="250" r="78" fill="url(#circleGrad)" stroke="#141517" stroke-width="7"/>
+    <circle cx="250" cy="250" r="70" fill="none" stroke="#4a4d52" stroke-width="2.5"/>
+
+    <!-- Lightning Bolt -->
+    <path d="M 264 185 L 210 252 L 248 252 L 236 315 L 290 248 L 252 248 Z"
+          fill="url(#boltGrad)"
+          stroke="#c99700"
+          stroke-width="1.5"
+          stroke-linejoin="round"/>
+  </g>
 </svg>

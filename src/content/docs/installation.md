@@ -21,6 +21,8 @@ curl -fsSL https://bun.sh/install | sudo BUN_INSTALL=/usr/local bash
 
 Note that the sudo sits on the **bash** side of the pipe — `sudo curl … | bash` would still run the installer as your normal user, because sudo would only apply to curl. The system-wide install puts `bun` in `/usr/local/bin`, which every shell — including sudo — can find.
 
+`BUN_INSTALL=/usr/local` appears on more than one command in this guide because it does two distinct jobs. The global `pboss` shim that `bun add -g` installs is a small symlink whose target begins with `#!/usr/bin/env bun` — so even `sudo pboss --version` launches bun before anything else, and root needs both the shim **and** bun itself on its PATH. On the installer line above, the variable is Bun's official prefix knob and lands **bun** in `/usr/local/bin`. On the `bun add -g pboss` and `bun update -g pboss` lines in the next section, it lands the **pboss shim** in `$BUN_INSTALL/bin` — also `/usr/local/bin` — with the package files under `/usr/local/install/global`. Leave it off and everything stays in `~/.bun/bin`, invisible to sudo; the fallback is a user-local install plus `sudo env PATH="$PATH" pboss startup` for every root command.
+
 **Windows (PowerShell):**
 
 ```powershell

@@ -2,6 +2,7 @@
 import { siteConfig } from "../config";
 import Header from "../components/Header.astro";
 import ThemeInit from "../components/ThemeInit.astro";
+import Analytics from "../components/Analytics.astro";
 import ClientEnhancements from "../components/ClientEnhancements.astro";
 import "../styles/global.css";
 ---
@@ -15,6 +16,7 @@ import "../styles/global.css";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="color-scheme" content="light dark" />
     <ThemeInit />
+    <Analytics />
   </head>
   <body class="bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
     <Header />

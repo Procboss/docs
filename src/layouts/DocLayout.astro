@@ -7,6 +7,7 @@ import Sidebar from "../components/Sidebar.astro";
 import Toc from "../components/Toc.astro";
 import PrevNext from "../components/PrevNext.astro";
 import ThemeInit from "../components/ThemeInit.astro";
+import Analytics from "../components/Analytics.astro";
 import ClientEnhancements from "../components/ClientEnhancements.astro";
 import "../styles/global.css";
 
@@ -31,6 +32,7 @@ const editUrl = `${siteConfig.links.docs}/edit/main/${contentBase}/${entry.id}.m
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <meta name="color-scheme" content="light dark" />
     <ThemeInit />
+    <Analytics />
     <meta property="og:title" content={entry.data.title} />
     <meta property="og:description" content={entry.data.description} />
     <meta property="og:type" content="article" />

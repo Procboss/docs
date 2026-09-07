@@ -79,7 +79,7 @@ Every CLI command has a method twin:
 
 | Area | Methods |
 |---|---|
-| Process control | `start(options)`, `startEcosystem(config)`, `stop(target?)`, `restart(target?)`, `reload(target?)`, `del(target?)` / `delete(target?)`, `scale(target, count)`, `sendSignal(target, signal)`, `reset(target?)` |
+| Process control | `start(options)`, `startTarget(target)`, `startEcosystem(config)`, `stop(target?)`, `restart(target?)`, `reload(target?)`, `del(target?)` / `delete(target?)`, `scale(target, count)`, `sendSignal(target, signal)`, `reset(target?)` |
 | Introspection | `list()`, `describe(target)`, `logs(target?, lines?)`, `streamLogs(target, cb, signal?)`, `flush(target?)` |
 | Monitoring | `metrics()`, `metricsHistory(seconds?)`, `prometheus()`, `startPolling(intervalMs?)`, `stopPolling()` |
 | Persistence | `save()`, `resurrect()` |
@@ -87,6 +87,12 @@ Every CLI command has a method twin:
 | Modules | `moduleInstall(nameOrPath)`, `moduleUninstall(name)`, `moduleList()` |
 | Daemon | `ping()`, `kill()`, `daemonReload()` |
 | Low-level | `send(message: DaemonMessage)` — arbitrary daemon messages over the Unix socket |
+
+Targets accept a **namespace** everywhere — `"my-app"` operates on the whole group, with a clear not-found error for unknown targets instead of a silent no-op. `startTarget` resumes stopped members by name or namespace without creating anything new:
+
+```ts
+await pboss.startTarget("stellarforge"); // every stopped member comes back online
+```
 
 `streamLogs` is the programmatic tail:
 

@@ -5,7 +5,24 @@ section: cli
 order: 1
 ---
 
-Every command accepts a **target**: a numeric id (`0`), a process name (`my-api`), a namespace (`my-namespace`), or `all`.
+Every command accepts a **target**: a numeric id (`0`), a process name (`my-api`), a namespace (`my-namespace`), or `all`. A target that matches a process name (or its cluster instances) always wins; otherwise a namespace target operates on **every process in the group**. Unknown targets are clear errors — `Process or namespace "x" not found — nothing to <verb>` — instead of a silent no-op.
+
+## Namespaces
+
+A namespace is a first-class grouping mechanism, not just metadata. Assign one at start, and every lifecycle verb accepts it as a target:
+
+```bash
+pboss start ./web.ts    --name web    --namespace my-app
+pboss start ./api.ts    --name api    --namespace my-app
+pboss start ./worker.ts --name worker --namespace my-app
+
+pboss restart my-app   # the whole group, in one command
+pboss stop my-app      # ✓ Stopped 3 processes in namespace "my-app"
+pboss start my-app     # resume every stopped member (online ones untouched)
+pboss delete my-app    # confirmed first — or --force to skip
+```
+
+Group operations report what they touched (a one-line summary above the process table), and the auto-saved dump follows immediately, so the group state survives reboots by default. `pboss list` shows the namespace column.
 
 ## pboss start
 
@@ -13,6 +30,13 @@ Start a new process or processes.
 
 ```bash
 pboss start server.ts
+```
+
+`pboss start <name|namespace>` — when the positional is not an existing script or config file — **resumes** processes that already exist: every stopped member comes back online, online ones are untouched, nothing new is created.
+
+```bash
+pboss start my-app   # resume every stopped process in the namespace
+pboss start api      # resume one stopped process by name
 ```
 
 ```bash
@@ -96,6 +120,8 @@ pboss stop my-namespace
 pboss stop all
 ```
 
+A namespace target stops every member of the group (and only those), with a one-line summary naming the group. `all` on an empty list stays a no-op.
+
 Stopping is graceful by default: the process receives `SIGTERM` and has the kill timeout (default 5s) to exit before `SIGKILL` is sent.
 
 ## pboss restart
@@ -104,8 +130,11 @@ Stop and restart a process. The process is fully stopped and then re-spawned —
 
 ```bash
 pboss restart my-api
+pboss restart my-namespace
 pboss restart all
 ```
+
+A namespace target restarts every member — including members that were stopped (restart on a stopped process starts it).
 
 ## pboss reload
 
@@ -113,6 +142,7 @@ Graceful zero-downtime reload. New instances start before old ones are killed, e
 
 ```bash
 pboss reload my-api
+pboss reload my-namespace
 pboss reload all
 ```
 
@@ -130,8 +160,12 @@ Stop and remove a process from pboss's management.
 ```bash
 pboss delete 0
 pboss delete my-api
+pboss delete my-namespace
+pboss delete my-namespace --force
 pboss delete all
 ```
+
+Deleting a **namespace** removes every process in the group. Because that can take several processes at once, pboss asks for confirmation first — `[y/N]` in a terminal, and a hard refusal with a `--force` hint when stdin is not a TTY (scripts, CI, pipes). Name and cluster deletes keep their old unconfirmed behavior, as does `delete all`.
 
 ## pboss scale
 

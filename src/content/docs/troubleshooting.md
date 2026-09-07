@@ -137,4 +137,4 @@ All data lives in `~/.pboss/`:
 └── modules/             # Installed pboss modules
 ```
 
-Cloud credentials live separately at `~/.config/pboss/credentials.json` — see [Linking a server](/cloud/link-server).
+Cloud credentials live separately: the machine link at `~/.pboss/cloud.json`, the user login at `~/.pboss/cloud-user.json` (both 0600) — see [Linking a server](/cloud/link-server).

@@ -1,123 +1,174 @@
 ---
 title: Agent API
-description: The HTTP API a linked machine speaks — device flow endpoints, token exchange semantics, heartbeat, refresh, and logout.
+description: The HTTP surface a linked machine and the CLI speak — device flow, agent stream, state reports, commands, fleet, and user tokens.
 section: cloud
 order: 3
 ---
 
-The endpoints below are what the pboss agent (`pboss login` and the heartbeat loop) speaks against `https://procboss.com`. They're documented for custom integrations — if you're building your own agent, follow the same contract.
+The endpoints below are what the pboss agent (the daemon's cloud link) and the CLI speak against `https://procboss.com` (override with `--url` or `PBOSS_CLOUD_URL`). They're documented for custom integrations — if you're building your own agent or a compatible cloud, follow the same contract. All requests and responses are JSON.
 
-All requests and responses are JSON. Machine-facing auth uses `Authorization: Bearer <token>`.
+Two credential spaces exist:
 
-## Device flow
+- **Machine**: `Authorization: Bearer <serverId>.<pbs_… secret>` — held by the daemon.
+- **User (CLI)**: `Authorization: Bearer <pbu_… token>` — held by the CLI (`pboss login`).
 
-### POST /api/device/start
+## Device flow (both scopes)
 
-Anonymous. Registers a pending link and returns the codes the CLI needs.
+### POST /api/device/code
+
+Anonymous. Registers a pending login and returns the codes the CLI needs.
 
 ```json
 {
+  "scope": "machine",
   "hostname": "my-server",
-  "os": "linux-x64",
-  "bunVersion": "1.1.34",
-  "agentVersion": "pboss/1.2.0"
+  "os": "linux",
+  "arch": "x64",
+  "agentVersion": "pboss/1.2.0",
+  "client": "pboss-cli"
 }
 ```
 
-Response (`201`):
+Response (`200`):
 
 ```json
 {
-  "device_code": "gU8nOzTP…",
-  "user_code": "PBSS-H3TN",
-  "verification_uri": "https://procboss.com/link?code=PBSS-H3TN",
-  "expires_in": 600,
-  "interval": 5
+  "deviceCode": "pbd_86jo9jtU_-…",
+  "userCode": "F7KD-92XM",
+  "verificationUrl": "https://procboss.com/connect",
+  "expiresInMs": 600000,
+  "intervalMs": 2000
 }
 ```
 
-`device_code` is secret — it is returned exactly once and stored server-side only as a hash. `user_code` is what the human sees.
+`deviceCode` is secret — returned exactly once, stored server-side only as a sha256 hash. `userCode` is what the human types at `/connect`.
 
-### POST /api/device/authorize
+### GET /api/device/pending/[userCode]
 
-Browser-side, requires a signed-in session (cookie). Body: `{ "code": "PBSS-H3TN", "deny": false }`. On approval the pending link is bound to the signed-in user; on denial it's marked denied.
+Public. The approval card's data — scope, status, hostname, OS, arch, agentVersion, client, expiry. No secrets, no ids.
+
+### POST /api/device/[userCode]/approve
+
+Browser-side, requires a signed-in session (cookie). Body: `{ "action": "approve" | "deny" }`. Machine scope creates (or re-links — same owner + hostname) the Server row; the secret is **not** minted here. User scope records intent. Late approvals of expired codes are refused (`410`).
 
 ### POST /api/device/token
 
-The CLI's poll loop. Body: `{ "device_code": "…" }`. Responses follow OAuth device-flow semantics:
+The CLI's poll loop. Body: `{ "deviceCode": "…" }`. Responses follow device-flow semantics:
 
 | State | Status | Body |
 |---|---|---|
-| Pending | `400` | `{ "error": "authorization_pending", "interval": 5 }` |
-| Polling too fast | `429` | `{ "error": "slow_down", "interval": 5 }` + `Retry-After` |
+| Pending | `400` | `{ "error": "authorization_pending" }` |
+| Polling too fast | `428` | `{ "error": "slow_down" }` (client grows its interval ×1.5) |
 | Denied | `403` | `{ "error": "access_denied" }` |
-| Code dead/expired | `400` | `{ "error": "expired_token" }` |
-| Granted | `200` | token bundle (below) |
+| Code dead/expired | `410` | `{ "error": "expired_token" }` |
+| Granted | `200` | credential (below) — **exactly once** |
 
-The exchange is **one-time** — once granted, the device code can never mint a second session.
-
-Token bundle:
+Machine grant (the raw secret is minted at claim time; a raced second claim gets `expired_token`):
 
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIs…",
-  "refresh_token": "pbr_9f8e7d…",
-  "token_type": "Bearer",
-  "expires_in": 900,
-  "server_id": "srv_…",
-  "server_name": "my-server",
-  "user": { "id": "usr_…", "name": "Sam Rivera", "email": "sam@example.com" }
+  "scope": "machine",
+  "serverId": "srv_…",
+  "serverSecret": "pbs_…",
+  "serverName": "srv-my-server"
 }
 ```
 
-## Agent session
-
-### POST /api/agent/heartbeat
-
-`Authorization: Bearer <access JWT>`. A linked machine's check-in, every 15 seconds:
+User grant:
 
 ```json
 {
+  "scope": "user",
+  "token": "pbu_…",
+  "tokenName": "cli@my-server",
+  "user": { "email": "sam@example.com", "name": "Sam Rivera", "handle": "samrivera", "provider": "github" }
+}
+```
+
+## Agent endpoints (machine credential)
+
+### POST /api/agent/enroll
+
+Legacy pasted-token path: exchange a dashboard-minted single-use `pbc_…` token for the same machine credential. Atomic single-use claim; re-links revoked rows for the same owner + hostname.
+
+### GET /api/agent/stream
+
+The **command channel**. The daemon opens this SSE stream and holds it; the cloud writes command frames down it:
+
+```text
+event: command
+data: {"id":"<uuid>","type":"process.restart","payload":{"target":"web"}}
+```
+
+Keepalive comments (`: ping`) flow every few seconds. A `401` means revoked — the agent wipes its credential and stops. Command types: `process.list`, `process.start`, `process.stop`, `process.restart`, `process.delete`, `process.logs`, `server.info`.
+
+### POST /api/agent/state
+
+State report, every 10 seconds and after every command:
+
+```json
+{
+  "serverId": "srv_…",
+  "status": "online",
+  "hostname": "my-server",
+  "os": "linux",
+  "arch": "x64",
+  "bunVersion": "1.2.20",
+  "agentVersion": "pboss/1.2.0",
   "cpu": 12,
   "memUsed": 800,
   "memTotal": 4000,
-  "status": "online",
-  "os": "linux-x64",
-  "bunVersion": "1.1.34",
-  "agentVersion": "pboss/1.2.0",
   "processes": [
-    {
-      "name": "web",
-      "script": "server.ts",
-      "pmId": 0,
-      "status": "online",
-      "cpu": 5,
-      "mem": 120,
-      "restarts": 0,
-      "crashes": 0,
-      "uptimeSec": 3600
-    }
+    { "name": "web", "script": "server.ts", "pmId": 0, "status": "online",
+      "cpu": 5, "mem": 120, "restarts": 0, "crashes": 0, "uptimeSec": 3600 }
+  ],
+  "events": [
+    { "kind": "crash", "process": "web", "at": 1690000000000, "detail": "process errored" }
   ]
 }
 ```
 
-The process list is synced keyed by `(server, pmId)` — renames and removals flow through naturally. Response: `{ "ok": true, "serverId": "…", "processes": 1, "nextHeartbeatMs": 15000 }`.
+Answers `409 { "error": "stream_not_registered" }` until the SSE stream is connected (the agent retries shortly — the race at startup is normal). Crash events become alert rows.
 
-Errors: `401 invalid_token` (expired JWT — refresh and retry), `401 session_revoked` (machine was revoked — re-link required).
+### POST /api/agent/command-result
 
-### POST /api/agent/refresh
+The agent's answer to a dispatched command: `{ "commandId": "…", "success": true, "data": … }` (or `error`). The dashboard's dispatch call resolves when this lands.
 
-`Authorization: Bearer <refresh token>` (the opaque `pbr_…` value). Returns a fresh token bundle (same shape as the grant above) — a new 15-minute JWT, the same refresh token, valid until the session's 30-day window ends.
+### GET /api/agent/servers
 
-A `401` here means the refresh token is dead (revoked or expired): the machine must run `pboss login` again.
+The fleet this machine's owner sees, with **live presence** (a connected agent is `online` regardless of the stored row):
 
-### POST /api/agent/logout
+```json
+{
+  "servers": [
+    { "id": "srv_…", "name": "srv-api-01", "host": "api-01.example",
+      "status": "online", "os": "linux", "agentVersion": "pboss/1.2.0",
+      "cpu": 12, "memUsed": 800, "memTotal": 4000,
+      "lastSeen": "2026-09-08T…", "enrolled": true }
+  ]
+}
+```
 
-`Authorization: Bearer <refresh token>`. Revokes the agent session server-side; the CLI also wipes the local credentials file. Idempotent — logging out twice is not an error. The server row stays in the fleet, marked offline.
+This is what `pboss cloud servers` renders — fetched by the daemon, so the machine secret never reaches the CLI process.
+
+### POST /api/agent/disconnect
+
+Self-revocation (`pboss cloud disconnect`): nulls the stored credential hash. Idempotent.
+
+## User endpoints (CLI token)
+
+### GET /api/me
+
+`Authorization: Bearer pbu_…`. Returns the account + token metadata (email, name, handle, provider, tokenName, lastUsedAt). Powers `pboss whoami`.
+
+### POST /api/me/revoke
+
+Self-revocation of the presented token (`pboss logout`) — this device only, never the account or other devices. Idempotent.
 
 ## Security model recap
 
-- Device codes and refresh tokens are only ever stored hashed server-side.
-- The access JWT binds user ↔ server ↔ session; every write is ownership-checked again in the route.
-- Heartbeats are read-only reporting — no remote command execution exists in the protocol.
-- Sessions are revocable per machine at any time, effective immediately.
+- Device codes, machine secrets, and CLI tokens are only ever stored hashed (sha256) server-side; raw forms exist once, in flight, and in the local 0600 files.
+- The credential is minted at claim time and handed over exactly once; codes expire in 10 minutes and can be denied at the approval card.
+- Everything is outbound from the machine: SSE + HTTPS POSTs. No inbound port ever exists on the agent side.
+- Machine credentials, CLI tokens, and browser sessions are three independent revocable spaces.
+- Remote commands are a fixed seven-operation whitelist executed by the local daemon; every write is ownership-checked server-side.

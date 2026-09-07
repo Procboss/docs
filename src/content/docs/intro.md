@@ -43,9 +43,10 @@ pboss replaces complex, heavyweight process managers with a clean, ultra-fast ar
 | Process control | ✅ full CLI + dashboard | ✅ same CLI, same commands |
 | Fleet overview across servers | per-machine | one dashboard for every linked server |
 | Alerts & uptime history | — | ✅ |
-| Linking a machine | — | `pboss login` (see [ProcBoss Cloud](/cloud)) |
+| Linking a machine | — | `pboss cloud connect` (see [ProcBoss Cloud](/cloud)) |
+| Your user login on any CLI | — | `pboss login` / `pboss whoami` |
 
-The CLI is the same tool in both cases. The cloud layer only adds visibility: when you run `pboss login` on a machine, that machine starts reporting heartbeats (metrics and process lists) to your ProcBoss Cloud account — the CLI keeps working exactly as before, even if the machine goes offline.
+The CLI is the same tool in both cases. The cloud layer is purely additive: when you run `pboss cloud connect` on a machine, its daemon opens an outbound link and starts reporting state (metrics and process lists) while accepting remote commands — the CLI keeps working exactly as before, even if the machine goes offline or you unlink it.
 
 ## Where to go next
 

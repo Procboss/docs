@@ -9,7 +9,7 @@ ProcBoss Cloud is the hosted layer on top of pboss. You keep running your server
 
 - **Fleet dashboard** — every linked server in one place: status, CPU, memory, and the full process list of each machine, live.
 - **Remote process control** — restart, stop, start, delete, and read logs from the dashboard or your phone. Commands travel over the agent's own outbound connection; you never open a port.
-- **Alerts** — know when a server goes offline, a process crashes, or restarts pile up.
+- **Alerts** — know when a server goes offline, a process crashes, or restarts pile up — delivered to the dashboard's Alerts view **and** to the Telegram chat and Discord webhook you connect (see [Notifications](/cloud/notifications)).
 - **CLI fleet view** — `pboss cloud servers` shows the same fleet your dashboard shows, with live presence.
 - **Zero lock-in** — the CLI keeps working if the machine goes offline or you unlink it. Every local feature (processes, logs, cron, persistence, deployment) runs without an account; the cloud layer is purely additive.
 
@@ -40,4 +40,5 @@ ProcBoss Cloud pricing and tier details live on [procboss.com](https://procboss.
 ## Where to go next
 
 - [Linking a server](/cloud/link-server) — the device flow, the two credential spaces, and the security model in detail.
+- [Notifications](/cloud/notifications) — connect Telegram and Discord, alert preferences, and the webhook security model.
 - [Agent API](/cloud/agent-api) — the HTTP surface a linked agent speaks, for custom integrations and self-hosting.

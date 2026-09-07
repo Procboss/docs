@@ -63,12 +63,19 @@ A self-contained web dashboard with live charts, process controls, and a log vie
 
 ## Survive a reboot
 
+Nothing to do — it is the default. The installer already set up the boot service, and pboss saves your process list automatically after every change. On boot, the daemon starts and resurrects your apps.
+
 ```bash
-pboss save
-pboss startup
+pboss start my-api.ts   # saved automatically, resurrected at every boot
 ```
 
-`save` records the current process list; `startup` generates and installs a systemd / launchd / Task Scheduler service so the daemon starts at boot and resurrects your apps. Details in [Startup scripts](/cli/startup).
+If the boot service could not be installed automatically (user-level install without sudo), one command fixes it:
+
+```bash
+sudo env PATH="$PATH" pboss startup install
+```
+
+Details in [Startup scripts](/cli/startup).
 
 ## Where to go next
 

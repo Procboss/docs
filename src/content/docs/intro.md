@@ -29,7 +29,7 @@ pboss replaces complex, heavyweight process managers with a clean, ultra-fast ar
 - **Cron restarts** — schedule periodic restarts with standard cron expressions.
 - **File watching** — automatic restart on changes, with configurable watch paths and ignore patterns.
 - **Ecosystem files** — declare your whole topology in one JSON or TypeScript file.
-- **Persistence** — `pboss save` + `pboss startup` keeps your apps alive across daemon restarts and system reboots.
+- **Persistence (default on)** — the process list is saved automatically after every change and the boot service is installed at install time, keeping your apps alive across daemon restarts and system reboots.
 - **Remote deployment** — SSH-based deploys with git pull, release directories, symlink rotation, and pre/post hooks.
 - **Environment management** — store, retrieve, and inject environment variables per process, with `.env` file support.
 - **Module system** — extend pboss with plugins that hook into the process manager lifecycle.

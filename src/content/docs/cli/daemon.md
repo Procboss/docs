@@ -27,12 +27,14 @@ pboss kill
 
 This is the "everything off" switch: every managed process is stopped, then the daemon exits. Running any other pboss command afterwards starts a fresh daemon.
 
+`kill` deliberately does **not** touch the saved process list — the dump keeps describing what *should* run, so a reboot (or `systemctl start pboss`) resurrects everything as it was. Use `pboss delete <name>` first if you want processes gone for good.
+
 ## How the daemon fits together
 
 - **On-demand startup** — the first command that needs the daemon spawns it (under 50ms start, ~12MB RAM).
 - **One daemon per machine** — all CLI invocations, the dashboard, and the metrics endpoint talk to the same daemon over its Unix socket.
 - **Foreground exception** — `--no-daemon` skips all of this and supervises in-process; see [Foreground mode](/guide/docker).
-- **Reboots** — pair `pboss save` with `pboss startup` (sudo on Linux) and the OS service starts the daemon at boot, which resurrects your saved processes; see [Startup scripts](/cli/startup).
+- **Reboots** — the boot service (installed automatically at install time; `pboss startup install` when it could not be) starts the daemon at boot, and the auto-saved process list is resurrected; see [Startup scripts](/cli/startup).
 
 ## Troubleshooting
 

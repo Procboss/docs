@@ -9,9 +9,9 @@ order: 2
 
 - **Runtime:** Bun version 1.1.30 or higher (only needed for the Bun global install and building from source — the one-line installer delivers a compiled standalone binary that needs nothing else).
 - **Platforms:** Linux, macOS, and Windows.
-- **Privileges:** root (`sudo`) for the one-line installer and `pboss startup` on Linux/macOS; Administrator for the one-line installer and `pboss startup` on Windows. Both pboss and its installers check for the required privileges themselves and tell you exactly how to re-run them if you forget.
+- **Privileges:** root (`sudo`) for the one-line installer on Linux/macOS; Administrator for the one-line installer on Windows. Both pboss and its installers check for the required privileges themselves and tell you exactly how to re-run them if you forget. The boot startup service is installed **automatically** at the end of a one-line or global install; `pboss startup install` needs the same privileges when you have to run it manually.
 
-Install Bun if you haven't already. A **system-wide install** is recommended — `pboss startup` needs sudo on Linux, and sudo's PATH does not include per-user directories like `~/.bun/bin`:
+Install Bun if you haven't already. A **system-wide install** is recommended — `pboss startup install` needs sudo on Linux, and sudo's PATH does not include per-user directories like `~/.bun/bin`:
 
 **Linux / macOS (system-wide, recommended):**
 
@@ -21,7 +21,7 @@ curl -fsSL https://bun.sh/install | sudo BUN_INSTALL=/usr/local bash
 
 Note that the sudo sits on the **bash** side of the pipe — `sudo curl … | bash` would still run the installer as your normal user, because sudo would only apply to curl. The system-wide install puts `bun` in `/usr/local/bin`, which every shell — including sudo — can find.
 
-`BUN_INSTALL=/usr/local` appears on more than one command in this guide because it does two distinct jobs. The global `pboss` shim that `bun add -g` installs is a small symlink whose target begins with `#!/usr/bin/env bun` — so even `sudo pboss --version` launches bun before anything else, and root needs both the shim **and** bun itself on its PATH. On the installer line above, the variable is Bun's official prefix knob and lands **bun** in `/usr/local/bin`. On the `bun add -g pboss` and `bun update -g pboss` lines in the next section, it lands the **pboss shim** in `$BUN_INSTALL/bin` — also `/usr/local/bin` — with the package files under `/usr/local/install/global`. Leave it off and everything stays in `~/.bun/bin`, invisible to sudo; the fallback is a user-local install plus `sudo env PATH="$PATH" pboss startup` for every root command.
+`BUN_INSTALL=/usr/local` appears on more than one command in this guide because it does two distinct jobs. The global `pboss` shim that `bun add -g` installs is a small symlink whose target begins with `#!/usr/bin/env bun` — so even `sudo pboss --version` launches bun before anything else, and root needs both the shim **and** bun itself on its PATH. On the installer line above, the variable is Bun's official prefix knob and lands **bun** in `/usr/local/bin`. On the `bun add -g pboss` and `bun update -g pboss` lines in the next section, it lands the **pboss shim** in `$BUN_INSTALL/bin` — also `/usr/local/bin` — with the package files under `/usr/local/install/global`. Leave it off and everything stays in `~/.bun/bin`, invisible to sudo; the fallback is a user-local install plus `sudo env PATH="$PATH" pboss startup install` for every root command.
 
 **Windows (PowerShell):**
 
@@ -59,9 +59,11 @@ If the installer is started without the required privileges, it exits immediatel
 
 Bun is only used as the build toolchain during installation. The finished executable embeds the Bun runtime, so your system does **not** need Bun afterwards.
 
+The installer's final step enables **boot persistence** automatically: it installs the OS service (systemd unit / launchd agent / Scheduled Task), starts the daemon, and from then on every process you manage is saved after each change and resurrected at every reboot. Hosts without systemd (containers, minimal VMs) get a note instead of an error — run `sudo pboss startup install` there later if the host gains systemd.
+
 ### Bun global install
 
-If you already use Bun, run pboss straight from source. Install it **system-wide** so `sudo` can find it (`pboss startup` needs root on Linux, and plain `sudo pboss` cannot see per-user directories like `~/.bun/bin`):
+If you already use Bun, run pboss straight from source. Install it **system-wide** so `sudo` can find it (`pboss startup install` needs root on Linux, and plain `sudo pboss` cannot see per-user directories like `~/.bun/bin`):
 
 ```bash
 sudo BUN_INSTALL=/usr/local bun add -g pboss
@@ -69,13 +71,13 @@ sudo BUN_INSTALL=/usr/local bun add -g pboss
 
 This expects the system-wide Bun from the Requirements section above. Update later with `sudo BUN_INSTALL=/usr/local bun update -g pboss`.
 
-A user-local install (`bun add -g pboss` without sudo) also works — whenever a command needs root, keep your PATH visible to sudo:
+A user-local install (`bun add -g pboss` without sudo) also works — the boot service cannot be installed without root, so pboss prints the one command to enable it later; whenever a command needs root, keep your PATH visible to sudo:
 
 ```bash
-sudo env PATH="$PATH" pboss startup
+sudo env PATH="$PATH" pboss startup install
 ```
 
-On Windows, elevated shells keep your user PATH, so a regular `bun add -g pboss` is fine — just open the shell as Administrator for `pboss startup`.
+On Windows, elevated shells keep your user PATH, so a regular `bun add -g pboss` is fine — just open the shell as Administrator for `pboss startup install`.
 
 ### Build from source
 

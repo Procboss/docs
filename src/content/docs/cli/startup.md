@@ -39,7 +39,34 @@ When installed with sudo on Linux/macOS, the generated service runs as the **inv
 
 The generated file detects how pboss was installed and adapts the daemon command accordingly. On a **compiled standalone install** (one-line installer, `build:bin`) the service re-executes the pboss binary itself — `ExecStart=/usr/local/bin/pboss __daemon` — because the Bun runtime is embedded in the binary and is not required on the system. On a **script install** (`bun add -g pboss`, npm) the service runs the source on the system Bun runtime — `ExecStart=/usr/local/bin/bun run …/daemon.ts`. The generated file's header comment states which mode was detected.
 
-Bare `pboss startup` does not install anything — it prints the available options (`install` / `uninstall` / `generate`).
+The service `PATH` includes the target user's `~/.bun/bin` whenever it exists (even on compiled installs): worker processes inherit the service environment, so anything shelling out to `bun` by name resolves. Independently, the daemon self-heals its `PATH` at startup — daemons started by older service definitions also find Bun after upgrading the binary. See [runtimes](/runtimes) for the full discovery chain.
+
+Bare `pboss startup` does not install anything — it prints the available options (`install` / `uninstall` / `status` / `generate`).
+
+## pboss startup status
+
+A read-only report of boot persistence — nothing is started, installed, or changed:
+
+```bash
+pboss startup status
+```
+
+```text
+Boot startup service (systemd)
+  Service:    /etc/systemd/system/pboss.service
+  Installed:  yes
+  Enabled:    yes — starts at boot (multi-user.target)
+  Active:     active
+  Daemon:     reachable (pid 1234) at /home/ra/.pboss/daemon.sock
+
+Reboot persistence:
+  Dump:       /home/ra/.pboss/dump.json
+  On boot:    3 process(es) come back running, 1 stopped
+```
+
+When the service is missing, the report says so and prints the exact install command; saved processes are reported as waiting for the service. When there is nothing saved yet, it says so — starts are saved automatically, so the count appears the moment you run `pboss start`. The socket and dump are read from the home the daemon actually uses (an explicit `PBOSS_HOME` wins; otherwise the target user's `~/.pboss`, `SUDO_USER`-aware under sudo).
+
+The first `pboss start` on an empty machine also states where persistence stands — one line, only on a TTY (piped output stays clean for scripts): `✓ Persistence on: this process is saved and will come back after reboot` when the boot service is active, or the one command that enables it when it is not. PM2 makes you discover `pm2 startup && pm2 save` after losing processes to a reboot; pboss states its default out loud, once, at the moment it becomes relevant.
 
 ## pboss startup uninstall (alias: remove)
 

@@ -38,6 +38,18 @@ pboss start ./my-binary --interpreter none
 
 Everything else works identically: `--instances`, `--max-memory-restart`, health checks, log rotation, and the dashboard all apply to native binaries the same way they apply to scripts.
 
+## How pboss finds `bun` (runtime discovery)
+
+JavaScript/TypeScript workers are spawned by the **daemon** — and the daemon often runs where no login shell ever set a `PATH`: as a systemd service on Linux, a launchd agent on macOS, or a scheduled task on Windows. A PATH-only lookup would miss the most common Bun install location, `~/.bun/bin`, even though `which bun` finds it in your shell. pboss therefore resolves the interpreter through a full chain, in order:
+
+1. `PATH` — as seen by the current process (your shell's, when you run the CLI)
+2. `$BUN_INSTALL/bin` — set by the official `bun.sh` installer
+3. `~/.bun/bin` — the default user install, the one daemons cannot see
+4. `/usr/local/bin`, `/usr/bin`, `/opt/bun/bin`
+5. `/opt/homebrew/bin` — macOS Homebrew on Apple Silicon (not on a launchd PATH)
+
+Three layers make this work everywhere. The worker spawn uses the **absolute resolved path** (surviving any PATH). The generated boot service's `PATH` includes the target user's `~/.bun/bin` when present, so workers that call `bun` by name also resolve. And the daemon prepends the discovered bun directory to its own `PATH` at startup, healing daemons that older service definitions started with a minimal PATH. If no Bun exists at all, the error message lists every location that was checked before suggesting `--interpreter node` or `--interpreter none`.
+
 ## Running Python services
 
 ```bash

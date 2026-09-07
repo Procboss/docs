@@ -16,6 +16,20 @@ rm -f ~/.pboss/daemon.sock ~/.pboss/daemon.pid
 pboss list
 ```
 
+## "the Bun runtime was not found" — but bun IS installed
+
+The error appears when Bun lives where the daemon cannot see it — typically `~/.bun/bin` (the default `curl bun.sh/install` location) while the daemon was started by systemd/launchd with a minimal service PATH. `which bun` works in your shell because YOUR shell has that directory on PATH; the daemon does not.
+
+pboss searches `PATH`, `$BUN_INSTALL/bin`, `~/.bun/bin`, `/usr/local/bin`, `/usr/bin`, and `/opt/bun/bin` (plus `/opt/homebrew/bin` on macOS) — so if the error still fires, Bun genuinely is not in any of them **for the user the daemon runs as** (for example, Bun installed only for a different account). Check:
+
+```bash
+ls -l ~/.bun/bin/bun                # the default location
+echo $BUN_INSTALL                   # set by the bun.sh installer
+pboss startup status                # whose ~/.pboss the daemon uses
+```
+
+Fixes, in order of preference: install Bun for the daemon's user (`curl -fsSL https://bun.sh/install | bash`), set `BUN_INSTALL` in the unit (`sudo systemctl edit pboss` → `Environment=BUN_INSTALL=/opt/bun`), or pick another runtime for that process (`--interpreter node`, `--interpreter none` for binaries). After installing Bun, restart the service: `sudo systemctl restart pboss`.
+
 ## Process keeps restarting
 
 Check the error logs for crash information:

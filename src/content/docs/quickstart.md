@@ -63,10 +63,12 @@ A self-contained web dashboard with live charts, process controls, and a log vie
 
 ## Survive a reboot
 
-Nothing to do — it is the default. The installer already set up the boot service, and pboss saves your process list automatically after every change. On boot, the daemon starts and resurrects your apps.
+Nothing to do — it is the default. The installer already set up the boot service, and pboss saves your process list automatically after every change. On boot, the daemon starts and resurrects your apps. The first `pboss start` tells you where persistence stands in one line, so the default is never a silent surprise.
 
 ```bash
 pboss start my-api.ts   # saved automatically, resurrected at every boot
+pboss startup status    # read-only: service installed? daemon up? what a
+                        # reboot would restore
 ```
 
 If the boot service could not be installed automatically (user-level install without sudo), one command fixes it:

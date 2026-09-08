@@ -4,82 +4,41 @@ import { siteConfig } from "../config";
 const { links, product, productVersion } = siteConfig;
 ---
 
-<header
-  class="sticky top-0 z-40 border-b border-zinc-200 bg-white/85 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/85"
->
+<!-- procboss paper header: cream bar, thick ink underline, logo + wordmark,
+     version sticker, quiet nav. Single light theme. -->
+<header class="sticky top-0 z-40 border-b-2 border-ink-950 bg-paper/95 backdrop-blur">
   <div class="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:px-6">
-    <a href="/" class="flex items-center gap-2 font-semibold text-zinc-900 dark:text-zinc-100">
-      <svg viewBox="0 0 32 32" class="h-6 w-6" aria-hidden="true">
-        <rect width="32" height="32" rx="7" class="fill-zinc-900 dark:fill-zinc-100"></rect>
-        <path d="M17.5 4 8 18h6.5L13 28l10.5-15H17z" class="fill-emerald-400"></path>
-      </svg>
-      <span>{product}<span class="text-emerald-500">.docs</span></span>
+    <a href="/" class="flex items-center gap-2 font-bold text-ink-950">
+      <img src="/favicon.svg" alt="pboss logo" width="26" height="26" class="h-[26px] w-[26px]" />
+      <span class="text-[15px] tracking-tight">{product}<span class="text-boss-600">.docs</span></span>
     </a>
 
     <span
-      class="hidden rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500 sm:inline dark:border-zinc-800 dark:text-zinc-400"
+      class="hidden rounded-md border-2 border-ink-950 bg-mint-200 px-1.5 py-0.5 font-mono text-[9.5px] font-bold uppercase text-ink-950 sm:inline"
     >{productVersion}</span>
 
     <nav class="ml-auto flex items-center gap-1 text-sm">
       <a
         href="/cli/processes"
-        class="hidden rounded-md px-3 py-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 sm:block dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+        class="hidden rounded-md px-3 py-1.5 font-medium text-stone-600 hover:bg-cream-deep hover:text-ink-950 sm:block"
         aria-label="CLI reference">CLI</a
       >
       <a
         href="/cloud"
-        class="hidden rounded-md px-3 py-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 sm:block dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+        class="hidden rounded-md px-3 py-1.5 font-medium text-stone-600 hover:bg-cream-deep hover:text-ink-950 sm:block"
         aria-label="ProcBoss Cloud docs">Cloud</a
       >
       <a
         href={links.cloud}
-        class="rounded-md px-3 py-1.5 font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+        class="rounded-lg border-2 border-ink-950 bg-boss-400 px-3 py-1.5 text-[13px] font-bold text-ink-950 shadow-brutal-xs transition-all hover:-translate-y-0.5 hover:shadow-brutal-sm active:translate-y-0.5 active:shadow-none"
         aria-label="procboss.com">procboss.com</a
       >
-      <button
-        type="button"
-        data-theme-toggle
-        class="rounded-md p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
-        aria-label="Toggle light/dark theme"
-        title="Toggle light/dark theme"
-      >
-        <!-- moon: shown in light mode, click switches to dark -->
-        <svg
-          class="h-4.5 w-4.5 dark:hidden"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"
-          ></path>
-        </svg>
-        <!-- sun: shown in dark mode, click switches to light -->
-        <svg
-          class="hidden h-4.5 w-4.5 dark:block"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="4"></circle>
-          <path
-            stroke-linecap="round"
-            d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"
-          ></path>
-        </svg>
-      </button>
       <a
         href={links.pboss}
-        class="rounded-md p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+        class="flex items-center rounded-lg border-2 border-ink-950 bg-paper p-2 text-ink-950 shadow-brutal-xs transition-all hover:-translate-y-0.5 hover:shadow-brutal-sm active:translate-y-0.5 active:shadow-none"
         aria-label="pboss on GitHub"
         rel="noopener noreferrer" target="_blank">
-        <svg viewBox="0 0 16 16" class="h-4.5 w-4.5" fill="currentColor" aria-hidden="true">
+        <svg viewBox="0 0 16 16" class="h-4 w-4" fill="currentColor" aria-hidden="true">
           <path
             d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
           ></path>

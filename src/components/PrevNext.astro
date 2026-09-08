@@ -19,20 +19,20 @@ const href = (id: string) => (id === "intro" ? "/" : `/${id}`);
 
 {
   (prev || next) && (
-    <div class="mt-12 grid gap-4 border-t border-zinc-200 pt-6 sm:grid-cols-2 dark:border-zinc-800">
+    <div class="mt-14 grid gap-4 border-t-2 border-ink-950/15 pt-8 sm:grid-cols-2">
       <div>
         {prev && (
-          <a href={href(prev)} class="group block rounded-lg border border-zinc-200 p-4 transition-colors hover:border-emerald-300 dark:border-zinc-800 dark:hover:border-emerald-800">
-            <span class="text-xs text-zinc-400 dark:text-zinc-500">Previous</span>
-            <p class="mt-1 text-sm font-medium text-zinc-900 group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">{all.get(prev)}</p>
+          <a href={href(prev)} class="group block rounded-xl border-2 border-ink-950 bg-paper p-4 shadow-brutal-xs transition-all hover:-translate-y-0.5 hover:shadow-brutal-sm">
+            <span class="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">← Previous</span>
+            <p class="mt-1 text-sm font-semibold text-ink-950">{all.get(prev)}</p>
           </a>
         )}
       </div>
       <div class="sm:text-right">
         {next && (
-          <a href={href(next)} class="group block rounded-lg border border-zinc-200 p-4 transition-colors hover:border-emerald-300 dark:border-zinc-800 dark:hover:border-emerald-800">
-            <span class="text-xs text-zinc-400 dark:text-zinc-500">Next</span>
-            <p class="mt-1 text-sm font-medium text-zinc-900 group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">{all.get(next)}</p>
+          <a href={href(next)} class="group block rounded-xl border-2 border-ink-950 bg-paper p-4 shadow-brutal-xs transition-all hover:-translate-y-0.5 hover:shadow-brutal-sm">
+            <span class="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">Next →</span>
+            <p class="mt-1 text-sm font-semibold text-ink-950">{all.get(next)}</p>
           </a>
         )}
       </div>

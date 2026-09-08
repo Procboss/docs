@@ -8,18 +8,18 @@ const toc = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
 
 {
   toc.length > 1 && (
-    <nav aria-label="Table of contents" class="sticky top-20 hidden max-h-[calc(100vh-6rem)] overflow-y-auto py-2 xl:block">
-      <p class="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase dark:text-zinc-500">On this page</p>
-      <ul class="space-y-1.5 border-l border-zinc-200 dark:border-zinc-800">
+    <nav aria-label="Table of contents" class="sticky top-24 hidden max-h-[calc(100vh-7rem)] overflow-y-auto py-2 xl:block">
+      <p class="mb-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">On this page</p>
+      <ul class="space-y-1.5 border-l-2 border-ink-950/15">
         {toc.map((h) => (
           <li>
             <a
               href={`#${h.slug}`}
               class:list={[
-                "block border-l-0.5 text-sm leading-5 text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100",
+                "block border-l-2 text-[13px] leading-5 transition-colors",
                 h.depth === 2
-                  ? "-ml-px pl-3 border-zinc-200 dark:border-zinc-800"
-                  : "-ml-px pl-7 border-transparent hover:border-zinc-300 dark:hover:border-zinc-700",
+                  ? "-ml-0.5 pl-3 border-ink-950/40 font-medium text-stone-700 hover:border-ink-950 hover:text-ink-950"
+                  : "-ml-0.5 pl-7 border-transparent text-stone-500 hover:border-ink-950/40 hover:text-ink-950",
               ]}
             >
               {h.text}

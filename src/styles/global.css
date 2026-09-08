@@ -2,15 +2,34 @@
 @plugin "@tailwindcss/typography";
 
 /* ------------------------------------------------------------------ */
-/* dark mode strategy                                                   */
+/* ProcBoss docs — the "paper" design system                            */
 /*                                                                      */
-/* Class-based dark mode. The inline script in <head>                   */
-/* (components/ThemeInit.astro) resolves the visitor's choice — stored  */
-/* preference, else system preference — and puts `.dark` on <html>      */
-/* before first paint. All `dark:` utilities below follow that class.   */
+/* Matches procboss.com: cream page, ink text, 2px ink borders, hard    */
+/* offset shadows, mono uppercase labels, mint/boss-green accents,      */
+/* Gasoek One display headings, and dark terminal code blocks.          */
+/* Single light theme (the brand is a paper page; code stays dark).     */
 /* ------------------------------------------------------------------ */
 
-@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+  /* palette — identical tokens to the app */
+  --color-cream: #f4f1ea;
+  --color-cream-deep: #ebe7dc;
+  --color-paper: #ffffff;
+  --color-ink-950: #13111c;
+  --color-mint-100: #ddf4e7;
+  --color-mint-200: #c4edd6;
+  --color-mint-300: #ace6c4;
+  --color-peach: #ffd9a5;
+  --color-boss-400: #4ade80;
+  --color-boss-500: #22c55e;
+  --color-boss-600: #16a34a;
+
+  --font-display: "Gasoek One", "Geist", system-ui, sans-serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+    Consolas, "Liberation Mono", monospace;
+}
 
 /* ------------------------------------------------------------------ */
 /* base                                                                 */
@@ -19,18 +38,14 @@
 html {
   scroll-behavior: smooth;
   /* keep anchored headings out from under the sticky header */
-  scroll-padding-top: 5rem;
+  scroll-padding-top: 5.5rem;
   color-scheme: light;
 }
 
-html.dark {
-  color-scheme: dark;
-}
-
 body {
-  font-family:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  background-color: #f4f1ea;
+  color: #13111c;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -38,129 +53,104 @@ body {
 code,
 pre,
 kbd {
-  font-family:
-    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
-    "Liberation Mono", monospace;
+  font-family: var(--font-mono);
 }
 
-/* ------------------------------------------------------------------ */
-/* shiki dual themes                                                   */
-/*                                                                      */
-/* Shiki writes the LIGHT theme as plain inline styles on each <pre>   */
-/* and <span> (color:#6F42C1, background-color:#fff, ...). The DARK    */
-/* theme is emitted alongside as --shiki-dark / --shiki-dark-bg CSS    */
-/* custom properties. Inline styles beat any stylesheet rule, so the   */
-/* dark override needs !important — this is Astro's documented dual-   */
-/* theme pattern. In light mode the inline styles apply untouched.     */
-/* The active theme follows the .dark class on <html>.                 */
-/* ------------------------------------------------------------------ */
-
-html.dark .astro-code,
-html.dark .astro-code span {
-  color: var(--shiki-dark) !important;
+::selection {
+  background: rgba(255, 217, 165, 0.55);
+  color: #13111c;
 }
 
-html.dark .astro-code {
-  background-color: var(--shiki-dark-bg) !important;
-}
-
-.astro-code {
-  border: 1px solid rgb(0 0 0 / 0.08);
-}
-
-html.dark .astro-code {
-  border-color: rgb(255 255 255 / 0.08);
-}
-
-/* ------------------------------------------------------------------ */
-/* prose tweaks                                                         */
-/* ------------------------------------------------------------------ */
-
-.prose :where(h2, h3, h4)::before {
-  /* anchor offset for sticky header is on html; nothing needed here */
-  content: none;
-}
-
-/* headings are link targets — make that discoverable on hover */
-.prose :where(h2, h3) {
-  position: relative;
-}
-
-.prose :where(h2, h3) > .anchor {
-  position: absolute;
-  inset-inline-start: -1.25rem;
-  opacity: 0;
-  color: var(--color-emerald-500);
-}
-
-.prose :where(h2, h3):hover > .anchor {
-  opacity: 1;
-}
-
-/* inline code: subtle chip in both schemes */
-.prose :not(pre) > code {
-  color: inherit;
-  background-color: rgb(0 0 0 / 0.045);
-  border: 1px solid rgb(0 0 0 / 0.06);
-  border-radius: 0.375rem;
-  padding: 0.1rem 0.35rem;
-  font-weight: 500;
-  font-size: 0.875em;
-}
-
-html.dark .prose :not(pre) > code {
-  background-color: rgb(255 255 255 / 0.08);
-  border-color: rgb(255 255 255 / 0.08);
-}
-
-/* tables render borderless in dark mode without this */
-.prose table {
-  display: table;
-  width: 100%;
-}
-
-/* scrollbar — quiet, works in both schemes */
+/* quiet ink scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgb(113 113 122 / 0.4) transparent;
+  scrollbar-color: rgb(19 17 28 / 0.28) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(19 17 28 / 0.28);
+  border-radius: 999px;
 }
 
 /* ------------------------------------------------------------------ */
-/* code blocks: wrapper + copy button                                   */
-/*                                                                      */
-/* ClientEnhancements.astro wraps every Shiki <pre class="astro-code"> */
-/* in a .code-block div and appends a .copy-button to it. The wrapper  */
-/* keeps the button pinned while the <pre> itself scrolls horizontally.*/
+/* neo-brutalist hard shadows                                          */
 /* ------------------------------------------------------------------ */
 
+@utility shadow-brutal {
+  box-shadow: 5px 5px 0 0 #13111c;
+}
+@utility shadow-brutal-sm {
+  box-shadow: 3px 3px 0 0 #13111c;
+}
+@utility shadow-brutal-xs {
+  box-shadow: 2px 2px 0 0 #13111c;
+}
+
+/* googly-eye pupils glance left/right on a slow loop */
+@keyframes eye-nudge {
+  0%,
+  100% {
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+.animate-eye-nudge {
+  animation: eye-nudge 3.6s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* code blocks — dark terminals on the paper page                       */
+/*                                                                      */
+/* Shiki emits a single dark theme (github-dark) with inline colors;   */
+/* the terminal chrome is the brand recipe: 2px ink border, rounded,   */
+/* hard shadow, ink-black background forced over shiki's own bg.       */
+/* ------------------------------------------------------------------ */
+
+.astro-code {
+  background-color: #13111c !important;
+  border: 2px solid #13111c;
+  border-radius: 0.75rem;
+  box-shadow: 3px 3px 0 0 #13111c;
+  padding: 1rem 1.25rem !important;
+  font-size: 0.83rem;
+  line-height: 1.65;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+}
+
+/* code-block wrapper + copy button (injected by ClientEnhancements) */
 .code-block {
   position: relative;
 }
 
 .copy-button {
   position: absolute;
-  top: 0.5rem;
-  inset-inline-end: 0.5rem;
+  top: 0.6rem;
+  inset-inline-end: 0.6rem;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.3rem 0.55rem;
-  border-radius: 0.375rem;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  background-color: rgb(255 255 255 / 0.92);
-  color: #52525b;
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 500;
+  padding: 0.32rem 0.6rem;
+  border-radius: 0.45rem;
+  border: 2px solid #13111c;
+  background-color: #f4f1ea;
+  color: #13111c;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.01em;
   cursor: pointer;
   opacity: 0;
   transition:
     opacity 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .code-block:hover .copy-button,
@@ -170,32 +160,17 @@ html.dark .prose :not(pre) > code {
 }
 
 .copy-button:hover {
-  background-color: #fafafa;
-  border-color: rgb(0 0 0 / 0.18);
+  box-shadow: 2px 2px 0 0 #13111c;
+  transform: translate(-1px, -1px);
 }
 
 .copy-button:focus-visible {
-  outline: 2px solid #10b981;
+  outline: 2px solid #16a34a;
   outline-offset: 2px;
 }
 
-html.dark .copy-button {
-  border-color: rgb(255 255 255 / 0.14);
-  background-color: rgb(24 24 27 / 0.92);
-  color: #a1a1aa;
-}
-
-html.dark .copy-button:hover {
-  background-color: #27272a;
-  border-color: rgb(255 255 255 / 0.2);
-}
-
 .copy-button[data-copied] {
-  color: #059669;
-}
-
-html.dark .copy-button[data-copied] {
-  color: #34d399;
+  background-color: #c4edd6;
 }
 
 /* touch devices have no hover — keep the button visible */
@@ -203,4 +178,120 @@ html.dark .copy-button[data-copied] {
   .copy-button {
     opacity: 0.75;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* prose — the paper reading surface                                    */
+/* ------------------------------------------------------------------ */
+
+.prose {
+  --tw-prose-body: #44403c;
+  --tw-prose-headings: #13111c;
+  --tw-prose-lead: #44403c;
+  --tw-prose-links: #13111c;
+  --tw-prose-bold: #13111c;
+  --tw-prose-counters: #78716c;
+  --tw-prose-bullets: #a8a29e;
+  --tw-prose-hr: rgb(19 17 28 / 0.2);
+  --tw-prose-quotes: #44403c;
+  --tw-prose-quote-borders: #13111c;
+  --tw-prose-captions: #78716c;
+  --tw-prose-code: #13111c;
+  --tw-prose-th-borders: rgb(19 17 28 / 0.2);
+  --tw-prose-td-borders: rgb(19 17 28 / 0.12);
+}
+
+.prose :where(h2, h3, h4)::before {
+  content: none;
+}
+
+/* headings are link targets — make the anchor discoverable on hover */
+.prose :where(h2, h3) {
+  position: relative;
+  scroll-margin-top: 5.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.prose :where(h2) {
+  font-size: 1.45rem;
+  margin-top: 2.4rem;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 2px solid rgb(19 17 28 / 0.85);
+}
+
+.prose :where(h3) {
+  font-size: 1.15rem;
+  margin-top: 1.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.prose :where(h2, h3) > .anchor {
+  position: absolute;
+  inset-inline-start: -1.35rem;
+  opacity: 0;
+  color: #16a34a;
+}
+
+.prose :where(h2, h3):hover > .anchor {
+  opacity: 1;
+}
+
+/* links: ink with a green underline — the creem-paper way */
+.prose :where(a) {
+  color: #13111c;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgb(34 197 94 / 0.45);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.prose :where(a):hover {
+  text-decoration-color: #16a34a;
+}
+
+/* inline code: sticker chip */
+.prose :not(pre) > code {
+  color: #13111c;
+  background-color: #ebe7dc;
+  border: 1px solid rgb(19 17 28 / 0.15);
+  border-radius: 0.375rem;
+  padding: 0.1rem 0.35rem;
+  font-weight: 500;
+  font-size: 0.85em;
+}
+
+/* tables: horizontal scroll on narrow screens instead of page overflow */
+.prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.prose :where(th) {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #78716c;
+  font-weight: 600;
+}
+
+.prose :where(td) {
+  vertical-align: top;
+}
+
+/* callouts via blockquote: sticker card with mint edge */
+.prose :where(blockquote) {
+  border-inline-start: 4px solid #13111c;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 0.9rem 1.25rem;
+  box-shadow: 2px 2px 0 0 #13111c;
+  font-style: normal;
+  font-weight: 450;
 }

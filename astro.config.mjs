@@ -52,14 +52,11 @@ export default defineConfig({
 
   markdown: {
     rehypePlugins: [anchorHeadings],
-    // Dual shiki themes, resolved at build time. Colors are emitted as CSS
-    // custom properties (--shiki-light / --shiki-dark) and switched by the
-    // media query in global.css — no client JS involved.
+    // Single dark theme — code blocks are dark terminals on the light paper
+    // page (the brand pattern). global.css forces the ink-black background
+    // and adds the brutal chrome.
     shikiConfig: {
-      themes: {
-        light: "github-light",
-        dark: "github-dark",
-      },
+      theme: "github-dark",
       wrap: false,
     },
   },

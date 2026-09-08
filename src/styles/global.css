@@ -6,7 +6,9 @@
 /*                                                                      */
 /* Matches procboss.com: cream page, ink text, 2px ink borders, hard    */
 /* offset shadows, mono uppercase labels, mint/boss-green accents,      */
-/* Gasoek One display headings, and dark terminal code blocks.          */
+/* Bricolage Grotesque display headings (chunky but a real 200-800      */
+/* variable weight axis — Gasoek One's single black weight smeared at   */
+/* small sizes), and dark terminal code blocks.                         */
 /* Single light theme (the brand is a paper page; code stays dark).     */
 /* ------------------------------------------------------------------ */
 
@@ -24,7 +26,7 @@
   --color-boss-500: #22c55e;
   --color-boss-600: #16a34a;
 
-  --font-display: "Gasoek One", "Geist", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Geist", system-ui, sans-serif;
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo,

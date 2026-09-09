@@ -102,7 +102,7 @@ CMD ["pboss", "start", "--no-daemon", "./server.ts"]
 ```bash
 pboss start ecosystem.config.json
 pboss save
-sudo env PATH="$PATH" pboss startup
+pboss startup install
 pboss dashboard
 pboss list
 ```

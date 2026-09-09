@@ -1,83 +1,55 @@
 ---
 title: Installation
-description: Install pboss with the one-line installer (sudo on Linux/macOS, Administrator on Windows) or Bun, or build the standalone binary from source. Requirements and updates.
+description: Install pboss with the one-line installer, Bun, or build from source — no root required on any platform. Requirements and updates.
 section: getting-started
 order: 2
 ---
 
 ## Requirements
 
-- **Runtime:** Bun version 1.1.30 or higher (only needed for the Bun global install and building from source — the one-line installer delivers a compiled standalone binary that needs nothing else).
 - **Platforms:** Linux, macOS, and Windows.
-- **Privileges:** root (`sudo`) for the one-line installer on Linux/macOS; Administrator for the one-line installer on Windows. Both pboss and its installers check for the required privileges themselves and tell you exactly how to re-run them if you forget. The boot startup service is installed **automatically** at the end of a one-line or global install; `pboss startup install` needs the same privileges when you have to run it manually.
-
-Install Bun if you haven't already. A **system-wide install** is recommended — `pboss startup install` needs sudo on Linux, and sudo's PATH does not include per-user directories like `~/.bun/bin`:
-
-**Linux / macOS (system-wide, recommended):**
-
-```bash
-curl -fsSL https://bun.sh/install | sudo BUN_INSTALL=/usr/local bash
-```
-
-Note that the sudo sits on the **bash** side of the pipe — `sudo curl … | bash` would still run the installer as your normal user, because sudo would only apply to curl. The system-wide install puts `bun` in `/usr/local/bin`, which every shell — including sudo — can find.
-
-`BUN_INSTALL=/usr/local` appears on more than one command in this guide because it does two distinct jobs. The global `pboss` shim that `bun add -g` installs is a small symlink whose target begins with `#!/usr/bin/env bun` — so even `sudo pboss --version` launches bun before anything else, and root needs both the shim **and** bun itself on its PATH. On the installer line above, the variable is Bun's official prefix knob and lands **bun** in `/usr/local/bin`. On the `bun add -g pboss` and `bun update -g pboss` lines in the next section, it lands the **pboss shim** in `$BUN_INSTALL/bin` — also `/usr/local/bin` — with the package files under `/usr/local/install/global`. Leave it off and everything stays in `~/.bun/bin`, invisible to sudo; the fallback is a user-local install plus `sudo env PATH="$PATH" pboss startup install` for every root command.
-
-**Windows (PowerShell):**
-
-```powershell
-powershell -c "irm bun.sh/install.ps1 | iex"
-```
-
-On Windows, elevated shells keep your user PATH, so a user-level Bun install works fine — just open the shell as Administrator whenever a command needs elevation.
+- **Privileges:** none. No root, no `sudo`, no Administrator — anywhere: not for installing, not for the boot service.
+- **Runtime:** Bun 1.1.30 or higher — only needed for the Bun global install and building from source. The one-line installer ships a compiled binary that embeds the Bun runtime and needs nothing else.
 
 ## Installation methods
 
-### One-line universal install
+### One-line install
 
-Install and compile the native standalone `pboss` executable directly on your device. The installer installs system-wide (`/usr/local/bin` on Linux/macOS, `%ProgramFiles%\pboss` on Windows) and therefore requires elevated privileges — pipe it through `sudo` on Linux/macOS, and run from an elevated shell on Windows:
+Compiles the standalone `pboss` executable and sets up the boot service. No root required: the binary goes to `~/.local/bin` (on PATH by default on modern distros) and the boot service is per-user.
 
 **Linux / macOS:**
 
 ```bash
-curl -fsSL https://procboss.com/install.sh | sudo bash
+curl -fsSL https://procboss.com/install.sh | bash
 ```
 
-**Windows (PowerShell, run as Administrator):**
+**Windows (PowerShell):**
 
 ```powershell
 powershell -c "irm https://procboss.com/install.ps1 | iex"
 ```
 
-**Windows (Command Prompt, run as Administrator):**
+**Windows (Command Prompt):**
 
 ```cmd
 curl -fsSL https://procboss.com/install.cmd | cmd
 ```
 
-If the installer is started without the required privileges, it exits immediately with the exact command to re-run it correctly — nothing is installed half-way.
+On Windows, a normal shell installs per-user to `%LOCALAPPDATA%\pboss`; an elevated shell installs machine-wide instead. On Linux/macOS, running the installer as root still works and installs to `/usr/local/bin` — but sudo is never required.
 
-Bun is only used as the build toolchain during installation. The finished executable embeds the Bun runtime, so your system does **not** need Bun afterwards.
+Bun is only the build toolchain: the finished executable embeds the Bun runtime, so your system does not need Bun afterwards.
 
-The installer's final step enables **boot persistence** automatically: it installs the OS service (systemd unit / launchd agent / Scheduled Task), starts the daemon, and from then on every process you manage is saved after each change and resurrected at every reboot. Hosts without systemd (containers, minimal VMs) get a note instead of an error — run `sudo pboss startup install` there later if the host gains systemd.
+The installer's final step enables **boot persistence** automatically: it installs the per-user OS service (systemd user unit / launchd agent / Scheduled Task), starts the daemon, and from then on every process you manage is resurrected at every reboot. Hosts without systemd (containers, minimal VMs) get a note instead of an error — run `pboss startup install` there later if the host gains systemd.
 
 ### Bun global install
 
-If you already use Bun, run pboss straight from source. Install it **system-wide** so `sudo` can find it (`pboss startup install` needs root on Linux, and plain `sudo pboss` cannot see per-user directories like `~/.bun/bin`):
+If you don't have Bun yet: `curl -fsSL https://bun.sh/install | bash` (Linux/macOS) or `powershell -c "irm bun.sh/install.ps1 | iex"` (Windows).
 
 ```bash
-sudo BUN_INSTALL=/usr/local bun add -g pboss
+bun add -g pboss
 ```
 
-This expects the system-wide Bun from the Requirements section above. Update later with `sudo BUN_INSTALL=/usr/local bun update -g pboss`.
-
-A user-local install (`bun add -g pboss` without sudo) also works — the boot service cannot be installed without root, so pboss prints the one command to enable it later; whenever a command needs root, keep your PATH visible to sudo:
-
-```bash
-sudo env PATH="$PATH" pboss startup install
-```
-
-On Windows, elevated shells keep your user PATH, so a regular `bun add -g pboss` is fine — just open the shell as Administrator for `pboss startup install`.
+The `pboss` shim lands in `~/.bun/bin`. Update later with `bun update -g pboss`. The boot service is a per-user systemd unit (`~/.config/systemd/user`), so a user-local install is the recommended setup; if the host has no user systemd session, pboss prints the one command to enable it later (`pboss startup install`).
 
 ### Build from source
 
@@ -96,17 +68,16 @@ bun run build:bin
 pboss --version
 ```
 
-If the command is not found after a global install, make sure the install directory is on your `PATH` (Bun globals land in `~/.bun/bin`, or `/usr/local/bin` with the system-wide `BUN_INSTALL=/usr/local` flow; the one-line installer places the binary in `/usr/local/bin` on Linux/macOS and `%ProgramFiles%\pboss` on Windows, both of which the installer adds to the system PATH).
+If the command is not found, make sure the install directory is on your `PATH`: `~/.local/bin` (one-line installer), `~/.bun/bin` (Bun global), or `/usr/local/bin` (root install).
 
 ## Updating
 
-The update path depends on how you installed:
-
 | Method | Update command |
 |---|---|
-| One-line installer | re-run the same `curl -fsSL https://procboss.com/install.sh \| sudo bash` command |
-| Bun global (system-wide) | `sudo BUN_INSTALL=/usr/local bun update -g pboss` |
-| Bun global (user-local) | `bun update -g pboss` |
+| One-line installer | re-run the same `curl -fsSL https://procboss.com/install.sh \| bash` command |
+| Bun global | `bun update -g pboss` |
 | From source | `git pull && bun install && bun run build:bin` |
 
-The daemon is started on demand, so after an update simply run any `pboss` command — no separate daemon restart step is needed.
+Or just run `pboss upgrade` — it detects how pboss was installed and updates through the same channel.
+
+The daemon is started on demand, so after an update simply run any `pboss` command — no separate daemon restart is needed.

@@ -28,7 +28,7 @@ echo $BUN_INSTALL                   # set by the bun.sh installer
 pboss startup status                # whose ~/.pboss the daemon uses
 ```
 
-Fixes, in order of preference: install Bun for the daemon's user (`curl -fsSL https://bun.sh/install | bash`), set `BUN_INSTALL` in the unit (`sudo systemctl edit pboss` → `Environment=BUN_INSTALL=/opt/bun`), or pick another runtime for that process (`--interpreter node`, `--interpreter none` for binaries). After installing Bun, restart the service: `sudo systemctl restart pboss`.
+Fixes, in order of preference: install Bun for the daemon's user (`curl -fsSL https://bun.sh/install | bash`), set `BUN_INSTALL` in the unit (`systemctl --user edit pboss` → `Environment=BUN_INSTALL=/opt/bun`), or pick another runtime for that process (`--interpreter node`, `--interpreter none` for binaries). After installing Bun, restart the service: `systemctl --user restart pboss`.
 
 ## Process keeps restarting
 

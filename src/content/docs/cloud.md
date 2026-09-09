@@ -18,7 +18,7 @@ ProcBoss Cloud is the hosted layer on top of pboss. You keep running your server
 Servers have no browser, so pboss uses a **device-code flow** — the same pattern as `gh auth login`:
 
 ```bash
-sudo pboss cloud connect
+pboss cloud connect
 ```
 
 1. The CLI prints a URL (`procboss.com/connect`) and a short code like `F7KD-92XM`, then polls.

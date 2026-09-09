@@ -71,10 +71,10 @@ pboss startup status    # read-only: service installed? daemon up? what a
                         # reboot would restore
 ```
 
-If the boot service could not be installed automatically (user-level install without sudo), one command fixes it:
+If the boot service could not be installed automatically (for example a host without a user systemd session), one command fixes it — no sudo needed:
 
 ```bash
-sudo env PATH="$PATH" pboss startup install
+pboss startup install
 ```
 
 Details in [Startup scripts](/cli/startup).

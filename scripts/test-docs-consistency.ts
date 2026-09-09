@@ -182,6 +182,13 @@ ok("agent-api: event outbox / at-least-once described", agentApi.includes("outbo
 ok("agent-api: watchdog documented", agentApi.includes("watchdog"));
 ok("agent-api: jittered backoff documented", agentApi.includes("jittered"));
 ok("agent-api: TLS refusal documented", agentApi.includes("PBOSS_CLOUD_ALLOW_INSECURE"));
+
+//     link confirmation: the hello gate, the dual-transport credential, and
+//     the replaced close code are the proxy-mirage hardening (2026-09).
+ok("agent-api: hello confirmation documented", agentApi.includes("`hello` — the registration ack"));
+ok("agent-api: query-param credential transport documented", agentApi.includes("`?agent=` query parameter"));
+ok("agent-api: mirage open explained", agentApi.includes("mirage"));
+ok("agent-api: replaced close code documented", agentApi.includes("reason `replaced`"));
 ok("agent-api: 0700 home documented", agentApi.includes("0700"));
 ok("link-server: events survive outages", linkServer.includes("delivers any events"));
 ok("link-server: TLS-only claim", linkServer.includes("refused off-loopback"));

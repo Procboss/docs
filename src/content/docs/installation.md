@@ -9,7 +9,6 @@ order: 2
 
 - **Platforms:** Linux, macOS, and Windows.
 - **Privileges:** none. No root, no `sudo`, no Administrator — anywhere: not for installing, not for the boot service.
-- **Runtime:** Bun 1.1.30 or higher — only needed for the Bun global install and building from source. The one-line installer ships a compiled binary that embeds the Bun runtime and needs nothing else.
 
 ## Installation methods
 

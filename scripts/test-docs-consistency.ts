@@ -69,6 +69,8 @@ const noiseFragments: Array<[string, string]> = [
   ["elevated/root install explainer", "a normal shell installs per-user to"],
   ["bun toolchain-only explainer", "Bun is only the build toolchain"],
   ["boot-persistence auto explainer", "enables **boot persistence** automatically"],
+  ["runtime version-floor essay", "Bun 1.1.30 or higher"],
+  ["embedded-runtime reassurance", "embeds the Bun runtime and needs nothing else"],
 ];
 
 for (const [name, fragment] of noiseFragments) {

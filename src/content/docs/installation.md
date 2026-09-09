@@ -15,7 +15,7 @@ order: 2
 
 ### One-line install
 
-Compiles the standalone `pboss` executable and sets up the boot service. No root required: the binary goes to `~/.local/bin` (on PATH by default on modern distros) and the boot service is per-user.
+Compiles the standalone `pboss` executable and sets up the per-user boot service. No root required: the binary goes to `~/.local/bin` (Linux/macOS) or `%LOCALAPPDATA%\pboss` (Windows).
 
 **Linux / macOS:**
 
@@ -34,12 +34,6 @@ powershell -c "irm https://procboss.com/install.ps1 | iex"
 ```cmd
 curl -fsSL https://procboss.com/install.cmd | cmd
 ```
-
-On Windows, a normal shell installs per-user to `%LOCALAPPDATA%\pboss`; an elevated shell installs machine-wide instead. On Linux/macOS, running the installer as root still works and installs to `/usr/local/bin` — but sudo is never required.
-
-Bun is only the build toolchain: the finished executable embeds the Bun runtime, so your system does not need Bun afterwards.
-
-The installer's final step enables **boot persistence** automatically: it installs the per-user OS service (systemd user unit / launchd agent / Scheduled Task), starts the daemon, and from then on every process you manage is resurrected at every reboot. Hosts without systemd (containers, minimal VMs) get a note instead of an error — run `pboss startup install` there later if the host gains systemd.
 
 ### Bun global install
 

@@ -66,6 +66,9 @@ const noiseFragments: Array<[string, string]> = [
   ["BUN_INSTALL two-jobs essay", "`BUN_INSTALL=/usr/local` appears on more than one command in this guide"],
   ["privilege-exit note", "If the installer is started without the required privileges, it exits immediately"],
   ["sudo-fallback note", "the fallback is a user-local install plus"],
+  ["elevated/root install explainer", "a normal shell installs per-user to"],
+  ["bun toolchain-only explainer", "Bun is only the build toolchain"],
+  ["boot-persistence auto explainer", "enables **boot persistence** automatically"],
 ];
 
 for (const [name, fragment] of noiseFragments) {

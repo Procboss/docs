@@ -74,3 +74,5 @@ If the command is not found, make sure the install directory is on your `PATH`: 
 Or just run `pboss upgrade` — it detects how pboss was installed and updates through the same channel.
 
 The daemon is started on demand, so after an update simply run any `pboss` command — no separate daemon restart is needed.
+
+Reinstalls and upgrades keep everything: the process list and the cloud link (credential in `~/.pboss`) survive the binary swap. The installer reports a detected link, `pboss upgrade` restarts the daemon and verifies the link came back, and `pboss cloud status` picks one up even if it appeared after the daemon started.

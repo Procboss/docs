@@ -71,5 +71,8 @@ Yes — that's the point of the link, and it's precise: the command set is exact
 **What if the machine is offline for a while?**
 Nothing breaks. The server shows offline in the fleet view; when it comes back, the agent reconnects automatically (jittered backoff, then steady) and delivers any events that happened while the link was down — crashes included. The credential has no expiry — revoke it when the machine is decommissioned.
 
+**What happens to the link when I reinstall or upgrade pboss?**
+It survives — the credential is a permanent cache that lives in `~/.pboss`, never inside the package, so deleting and reinstalling the binary leaves it intact. Every daemon start resumes it, `pboss cloud status` picks it up even if the file appeared after the daemon started, and `pboss upgrade` restarts the daemon and verifies the link came back before it exits.
+
 **Where do credentials live?**
 `~/.pboss/cloud.json` for the machine (owned by the daemon), `~/.pboss/cloud-user.json` for your user login — both mode 0600 inside the owner-only (0700) `~/.pboss`, both raw secrets that exist server-side only as hashes. The agent only speaks to the cloud over TLS; plaintext URLs are refused off-loopback.

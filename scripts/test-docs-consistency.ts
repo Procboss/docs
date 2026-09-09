@@ -194,6 +194,12 @@ ok("link-server: events survive outages", linkServer.includes("delivers any even
 ok("link-server: TLS-only claim", linkServer.includes("refused off-loopback"));
 ok("link-server: 0700 home claim", linkServer.includes("0700"));
 ok("link-server: WebSocket link described", linkServer.includes("WebSocket"));
+// reinstall/upgrade permanence (Task 69): the credential is a permanent
+// cache that survives binary swaps, and every install/upgrade/status
+// moment re-checks for it.
+ok("link-server: reinstall permanence documented", linkServer.includes("permanent cache"));
+ok("link-server: status self-heal documented", linkServer.includes("picks it up even if the file appeared after the daemon started"));
+ok("installation: reinstall keeps the cloud link", installation.includes("survive the binary swap"));
 ok("cloud.md: WebSocket transport described", cloudMain.includes("/ws/agent"));
 ok("cloud.md: deploy commands listed", cloudMain.includes("deploy"));
 
@@ -232,6 +238,8 @@ ok(
   !pbossDocsMd.includes("Permission is hereby granted, free of charge"),
 );
 ok("pboss DOCS.md: license points at LICENSE file", pbossDocsMd.includes("GPL-3.0-only — see [LICENSE](LICENSE)"));
+ok("pboss DOCS.md: cloud credential permanence documented", pbossDocsMd.includes("**permanent cache**"));
+ok("pboss DOCS.md: upgrade verifies the resumed link", pbossDocsMd.includes("verifies the link came back"));
 
 // ---------------------------------------------------------------------------
 // Report

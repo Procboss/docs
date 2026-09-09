@@ -3,19 +3,21 @@
  * test-docs-consistency.ts — docs-vs-implementation consistency check.
  *
  * Owner rule: "For every update, write a test to confirm."
- * Guards the no-sudo documentation contract established when the boot
- * service became per-user (systemd --user unit / LaunchAgent / per-user
- * Scheduled Task, installers defaulting to ~/.local/bin and
- * %LOCALAPPDATA%\pboss):
+ * Guards the documentation contract of the installer target selection
+ * (2026-09-10: /usr/local/bin FIRST when sudo can elevate the binary copy,
+ * per-user boot service, ~/.local/bin fallback with PATH self-heal):
  *
  *   1. The retired long "privileges/BUN_INSTALL" explainer paragraphs are
  *      gone (the noise the owner had removed).
  *   2. No sudo command appears in any docs page or pboss DOCS.md/README —
- *      the only tolerated mentions are negative statements ("no sudo",
- *      "sudo is rejected", "never required") and the snap channel, where
- *      refreshing is inherently sudo (snapd design, not pboss).
+ *      sudo is OPTIONAL and never required; the only tolerated mentions
+ *      are prose statements about the optional system-wide binary copy,
+ *      negative statements ("no root", "never required"), and the snap
+ *      channel, where refreshing is inherently sudo (snapd design).
  *   3. The per-user facts ARE documented: user unit dir, systemctl --user,
- *      enable-linger, ~/.local/bin, %LOCALAPPDATA%\pboss.
+ *      enable-linger, ~/.local/bin, %LOCALAPPDATA%\pboss — plus the
+ *      /usr/local-bin-first target contract and its PBOSS_INSTALL_DIR /
+ *      PBOSS_NO_SUDO overrides.
  *   4. No stale system-service claims remain (/etc/systemd/system unit,
  *      multi-user.target, system-wide BUN_INSTALL flow).
  *   5. The pboss DOCS.md startup status example matches what the code
@@ -114,10 +116,22 @@ const startup = readFileSync(join(DOCS_SITE, "cli", "startup.md"), "utf8");
 const quickstart = readFileSync(join(DOCS_SITE, "quickstart.md"), "utf8");
 
 ok("installation: no-privileges requirement stated", /Privileges:\*\* none/.test(installation));
-ok("installation: ~/.local/bin default", installation.includes("~/.local/bin"));
+ok("installation: ~/.local/bin fallback documented", installation.includes("~/.local/bin"));
 ok("installation: %LOCALAPPDATA%\\pboss default", installation.includes("%LOCALAPPDATA%\\pboss"));
 ok("installation: bun add -g without sudo", /```bash\nbun add -g pboss\n```/.test(installation));
 ok("installation: one-liner has no sudo", !/curl -fsSL https:\/\/procboss\.com\/install\.sh \| sudo/.test(installation));
+// The /usr/local/bin-first target contract (owner request 2026-09-10):
+// system-wide when sudo can elevate ONLY the binary, PATH self-heal on the
+// fallback, same-directory refresh on every reinstall/upgrade, overrides.
+ok("installation: /usr/local/bin first when sudo can elevate", installation.includes("`/usr/local/bin` when sudo can elevate the copy"));
+ok("installation: on PATH for every user claim", installation.includes("on PATH for every user"));
+ok("installation: PATH self-heal on the fallback", installation.includes("automatic PATH fix"));
+ok("installation: only the binary is elevated", installation.includes("only the binary is elevated"));
+ok("installation: same-directory refresh documented", installation.includes("same install directory"));
+ok("installation: PBOSS_INSTALL_DIR override documented", installation.includes("PBOSS_INSTALL_DIR"));
+ok("installation: PBOSS_NO_SUDO override documented", installation.includes("PBOSS_NO_SUDO"));
+ok("pboss DOCS.md: target contract mirrored", readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes("`/usr/local/bin` when sudo can elevate the copy"));
+ok("pboss README: target contract mirrored", readFileSync(join(PBOSS, "README.md"), "utf8").includes("`/usr/local/bin` when sudo can elevate the copy"));
 ok("startup: per-user systemd unit path", startup.includes("~/.config/systemd/user/pboss.service"));
 ok("startup: systemctl --user", startup.includes("systemctl --user"));
 ok("startup: enable-linger documented", startup.includes("loginctl enable-linger"));

@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install pboss with the one-line installer, Bun, or build from source — no root required on any platform. Requirements and updates.
+description: Install pboss with the one-line installer, Bun, or build from source — no root required on any platform (sudo is optional, only to place the binary system-wide). Requirements and updates.
 section: getting-started
 order: 2
 ---
@@ -8,13 +8,13 @@ order: 2
 ## Requirements
 
 - **Platforms:** Linux, macOS, and Windows.
-- **Privileges:** none. No root, no `sudo`, no Administrator — anywhere: not for installing, not for the boot service.
+- **Privileges:** none required. sudo is optional — used only to place the binary in `/usr/local/bin` (on PATH for every user) when you allow it; without it the install is fully per-user. The boot service is always per-user, on every platform — never root, never an Administrator.
 
 ## Installation methods
 
 ### One-line install
 
-Compiles the standalone `pboss` executable and sets up the per-user boot service. No root required: the binary goes to `~/.local/bin` (Linux/macOS) or `%LOCALAPPDATA%\pboss` (Windows).
+Compiles the standalone `pboss` executable and sets up the per-user boot service. No root required: the binary goes to `/usr/local/bin` when sudo can elevate the copy (on PATH for every user — only the binary is elevated; the daemon, state, and boot service stay per-user), otherwise `~/.local/bin` with an automatic PATH fix in your shell profile (Linux/macOS), or `%LOCALAPPDATA%\pboss` (Windows).
 
 **Linux / macOS:**
 
@@ -61,7 +61,7 @@ bun run build:bin
 pboss --version
 ```
 
-If the command is not found, make sure the install directory is on your `PATH`: `~/.local/bin` (one-line installer), `~/.bun/bin` (Bun global), or `/usr/local/bin` (root install).
+If the command is not found, make sure the install directory is on your `PATH`: `~/.local/bin` (one-line installer without sudo — the installer adds it to your shell profile automatically), `~/.bun/bin` (Bun global), or `/usr/local/bin` (one-line installer with sudo, or root install — already on PATH).
 
 ## Updating
 
@@ -71,7 +71,7 @@ If the command is not found, make sure the install directory is on your `PATH`: 
 | Bun global | `bun update -g pboss` |
 | From source | `git pull && bun install && bun run build:bin` |
 
-Or just run `pboss upgrade` — it detects how pboss was installed and updates through the same channel.
+Or just run `pboss upgrade` — it detects how pboss was installed and updates through the same channel. The one-line installer always refreshes the same install directory (recorded in `~/.pboss/channel.json`), so an upgrade never spawns a second pboss. To move it: re-run the installer with `PBOSS_INSTALL_DIR=/new/path bash`; to force a per-user install: `PBOSS_NO_SUDO=1 bash`.
 
 The daemon is started on demand, so after an update simply run any `pboss` command — no separate daemon restart is needed.
 

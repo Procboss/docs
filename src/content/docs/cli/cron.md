@@ -53,12 +53,12 @@ Times use the 24-hour clock; dates are **day-month-year** (`24-10-2026` = Octobe
 
 Notes:
 
-- Hour **24** is accepted and means "the following day": `24:30` is `00:30` the next day.
+- Hour **24** means the following day: `24:30` is `00:30` the next day.
 - Dates are calendar-validated (leap years included) — `on-date@31-02-2026` is rejected with a clear error.
-- Keywords tolerate hyphens, underscores and camelCase: `on-date@`, `onDate@` and `on_date@` are the same word; so are `every-second` and `everySecond`.
-- Next-run times are computed by the mature [cron-parser](https://www.npmjs.com/package/cron-parser) library, which also validates raw cron expressions — 6-field ones get a seconds field.
-- Jobs missed while the machine or daemon was down are **skipped** (like classic cron), not back-filled; recurring jobs reschedule to their next future occurrence.
-- If a time has already passed for `today@…` or `on-date@…`, pboss rejects it with a suggestion instead of scheduling a job that never fires.
+- Keywords tolerate hyphens, underscores and camelCase: `on-date@`, `onDate@`, `on_date@` are the same word.
+- Next-run times come from the [cron-parser](https://www.npmjs.com/package/cron-parser) library, which also validates raw expressions — 6-field ones get a seconds field.
+- Jobs missed while the machine or daemon was down are **skipped** (like classic cron); recurring jobs reschedule to their next future occurrence.
+- A past time for `today@…` / `on-date@…` is rejected with a suggestion, not scheduled to never fire.
 
 Options for `cron run`:
 

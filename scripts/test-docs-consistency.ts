@@ -152,6 +152,64 @@ ok("pboss DOCS.md: Linger line in status example", pbossDocsMd.includes("#   Lin
 ok("pboss DOCS.md: linger guidance present", pbossDocsMd.includes("loginctl enable-linger $USER"));
 
 // ---------------------------------------------------------------------------
+// 6. Transport accuracy: the cloud agent link is the /ws/agent WebSocket
+//    (Task 56) — the retired SSE stream must not be documented anywhere.
+// ---------------------------------------------------------------------------
+const agentApi = readFileSync(join(DOCS_SITE, "cloud", "agent-api.md"), "utf8");
+const linkServer = readFileSync(join(DOCS_SITE, "cloud", "link-server.md"), "utf8");
+const cloudMain = readFileSync(join(DOCS_SITE, "cloud.md"), "utf8");
+for (const [name, text] of [
+  ["cloud.md", cloudMain],
+  ["cloud/link-server.md", linkServer],
+  ["cloud/agent-api.md", agentApi],
+] as Array<[string, string]>) {
+  ok(`no SSE transport claims: ${name}`, !/\bSSE\b|EventSource|server-sent/i.test(text));
+}
+ok("agent-api: /ws/agent WebSocket documented", agentApi.includes("### GET /ws/agent"));
+ok("agent-api: nine-command whitelist", agentApi.includes("process.deploy"));
+ok("agent-api: server.deploy documented", agentApi.includes("server.deploy"));
+ok("agent-api: log.watch documented", agentApi.includes("log.watch"));
+ok("link-server: WebSocket link described", linkServer.includes("WebSocket"));
+ok("cloud.md: WebSocket transport described", cloudMain.includes("/ws/agent"));
+ok("cloud.md: deploy commands listed", cloudMain.includes("deploy"));
+
+// ---------------------------------------------------------------------------
+// 7. Conciseness guard: no paragraph or list item over 100 words anywhere
+//    (the owner's "no walls of text" rule — prose blocks get trimmed, not
+//    tables/code, which are excluded below).
+// ---------------------------------------------------------------------------
+function proseItems(path: string): string[] {
+  const text = readFileSync(path, "utf8");
+  const out: string[] = [];
+  for (const p of text.split(/\n\s*\n/)) {
+    const para = p.trim();
+    if (!para || para.startsWith("```") || para.startsWith("|") || para.startsWith("#") || para.startsWith("- [")) continue;
+    // split consecutive list items so a bullet LIST is not counted as one block
+    if (/^[-*\d]/.test(para)) out.push(...para.split(/\n(?=[-*] |\d+\. )/));
+    else out.push(para);
+  }
+  return out;
+}
+for (const file of [...sitePages, ...pbossDocs]) {
+  const bad = proseItems(file).filter((i) => i.split(/\s+/).length > 100);
+  ok(
+    `concise (<100w per item): ${file.split("/").slice(-2).join("/")}`,
+    bad.length === 0,
+    bad.length ? `${bad[0].split(/\s+/).length}w item starts "${bad[0].slice(0, 60)}…"` : undefined,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 8. License sanity: DOCS.md declares GPL-3.0-only and must not paste the
+//    MIT permission grant under it (the mismatch fixed in Task 62).
+// ---------------------------------------------------------------------------
+ok(
+  "pboss DOCS.md: no MIT grant text under GPL header",
+  !pbossDocsMd.includes("Permission is hereby granted, free of charge"),
+);
+ok("pboss DOCS.md: license points at LICENSE file", pbossDocsMd.includes("GPL-3.0-only — see [LICENSE](LICENSE)"));
+
+// ---------------------------------------------------------------------------
 // Report
 // ---------------------------------------------------------------------------
 console.log(`docs consistency: ${passed} passed, ${failures.length} failed`);

@@ -7,33 +7,31 @@ order: 1
 
 **ProcBoss** comes in two parts that work independently and together:
 
-- **pboss** — a blazing-fast, universal production process manager built on Bun native APIs. Run, cluster, monitor, and manage any application — Node.js, Bun, Go, Python, Rust, Ruby, PHP, Java, native binaries, and shell scripts — with pure performance and zero overhead. Open source (GPLv3), by [procboss.com](https://procboss.com).
-- **ProcBoss Cloud** (procboss.com) — a hosted layer on top of pboss: link the servers you already run, and get fleet visibility, alerts, and metrics from one dashboard.
+- **pboss** — a blazing-fast, universal process manager built on Bun native APIs. Run, cluster, monitor, and manage any application — Node.js, Bun, Go, Python, Rust, Ruby, PHP, Java, binaries, shell scripts. Open source (GPLv3), by [procboss.com](https://procboss.com).
+- **ProcBoss Cloud** (procboss.com) — the optional hosted layer: link the servers you already run, get fleet visibility, alerts, and metrics from one dashboard.
 
 ## Why pboss?
 
-ProcBoss (pboss) is a universal, production-grade process manager built from the ground up for modern developer and DevOps workflows. While engineered on native Bun APIs for maximum throughput and minimal memory overhead, pboss is completely **runtime-agnostic** and manages any program, language, or software stack.
-
-pboss replaces complex, heavyweight process managers with a clean, ultra-fast architecture. It uses `Bun.spawn` for lightning-fast process orchestration, `Bun.serve` for the real-time web dashboard and IPC, native `WebSocket` over Unix sockets, `Bun.file` for high-performance I/O, and `Bun.gzipSync` for automatic log compression. The result is a single machine-level daemon that starts in under 50ms, uses only ~12MB of RAM, and manages your entire infrastructure seamlessly.
+pboss is a production-grade, runtime-agnostic process manager built on native Bun APIs — it manages any program, language, or stack. `Bun.spawn` for orchestration, `Bun.serve` for the dashboard and IPC, native `WebSocket` over Unix sockets, `Bun.file` for I/O, `Bun.gzipSync` for log compression. One daemon: <50ms start, ~12MB RAM.
 
 ## Feature highlights
 
-- **Universal multi-language support** — native auto-detection and execution for Node.js, Bun, Go, Python, Rust, Ruby, PHP, Java JARs, shell scripts, Windows scripts, and compiled binaries. See [Languages & runtimes](/runtimes).
-- **Process management** — start, stop, restart, reload, delete, and scale processes with automatic crash restart, configurable restart strategies, memory-limit restarts, and tree killing.
-- **Cluster mode** — run multiple instances with per-worker environment injection, automatic port assignment, and zero-downtime rolling reloads.
-- **Foreground mode** — `--no-daemon` blocks as PID 1 for Docker, Kubernetes, and any platform that expects the entrypoint to stay in the foreground.
-- **Web dashboard** — a self-contained dark-themed dashboard with live WebSocket updates, CPU/memory charts, process controls, and a log viewer. No external dependencies.
-- **Prometheus metrics** — a dedicated `/metrics` endpoint in Prometheus exposition format, ready for Grafana.
-- **Log management** — automatic capture, size-based rotation, retention, optional gzip compression, and real-time tailing.
-- **Health checks** — HTTP probes with configurable intervals, timeouts, and failure thresholds that automatically restart unhealthy processes.
-- **Cron restarts** — schedule periodic restarts with standard cron expressions.
-- **File watching** — automatic restart on changes, with configurable watch paths and ignore patterns.
+- **Universal multi-language support** — auto-detected: Node.js, Bun, Go, Python, Rust, Ruby, PHP, Java JARs, shell scripts, compiled binaries. See [Languages & runtimes](/runtimes).
+- **Process management** — start, stop, restart, reload, delete, scale; crash restart, restart strategies, memory-limit restarts, tree killing.
+- **Cluster mode** — N instances, per-worker env, automatic ports, zero-downtime rolling reloads.
+- **Foreground mode** — `--no-daemon` blocks as PID 1, for Docker and Kubernetes.
+- **Web dashboard** — live WebSocket updates, CPU/memory charts, process controls, log viewer. Zero dependencies.
+- **Prometheus metrics** — dedicated `/metrics` endpoint, ready for Grafana.
+- **Logs** — automatic capture, size-based rotation, retention, gzip, real-time tailing.
+- **Health checks** — HTTP probes with interval, timeout, and failure threshold; unhealthy processes restart.
+- **Cron restarts** — scheduled restarts with standard cron expressions.
+- **File watching** — restart on changes, with configurable paths and ignore patterns.
 - **Ecosystem files** — declare your whole topology in one JSON or TypeScript file.
-- **Persistence (default on)** — the process list is saved automatically after every change and the boot service is installed at install time, keeping your apps alive across daemon restarts and system reboots.
-- **Remote deployment** — SSH-based deploys with git pull, release directories, symlink rotation, and pre/post hooks.
-- **Environment management** — store, retrieve, and inject environment variables per process, with `.env` file support.
-- **Module system** — extend pboss with plugins that hook into the process manager lifecycle.
-- **IPC architecture** — a daemonized design where the CLI talks to a single machine-level daemon over WebSocket on a Unix socket.
+- **Persistence (default on)** — process list saved after every change; boot service installed at install time — apps survive restarts and reboots.
+- **Remote deployment** — SSH deploys with git pull, release directories, symlink rotation, pre/post hooks.
+- **Environment management** — per-process env vars, with `.env` file support.
+- **Module system** — plugins that hook into the process manager lifecycle.
+- **IPC architecture** — the CLI talks to one machine-level daemon over WebSocket on a Unix socket.
 
 ## pboss vs ProcBoss Cloud
 
@@ -46,7 +44,7 @@ pboss replaces complex, heavyweight process managers with a clean, ultra-fast ar
 | Linking a machine | — | `pboss cloud connect` (see [ProcBoss Cloud](/cloud)) |
 | Your user login on any CLI | — | `pboss login` / `pboss whoami` |
 
-The CLI is the same tool in both cases. The cloud layer is purely additive: when you run `pboss cloud connect` on a machine, its daemon opens an outbound link and starts reporting state (metrics and process lists) while accepting remote commands — the CLI keeps working exactly as before, even if the machine goes offline or you unlink it.
+The CLI is the same tool in both cases. The cloud layer is purely additive: `pboss cloud connect` opens an outbound link that reports state and accepts remote commands — the CLI keeps working exactly as before, even if the machine goes offline or you unlink it.
 
 ## Where to go next
 

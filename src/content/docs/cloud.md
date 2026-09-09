@@ -29,7 +29,7 @@ No secrets pasted through terminals, no passwords on the server, codes that expi
 
 ## What the agent does
 
-Once linked, the daemon's cloud agent keeps an **outbound-only** connection: an SSE command stream (commands flow cloud → machine) plus state reports every 10 seconds (machine → cloud: server metrics and the process list). Process commands (`process.list/start/stop/restart/delete/logs`, `server.info`) execute through the same daemon that runs your local CLI — the dashboard is just another client of your machine's process engine.
+Once linked, the daemon's cloud agent keeps one **outbound-only WebSocket** (`/ws/agent`): commands flow cloud → machine, state reports (every 10 seconds: server metrics + the process list) flow machine → cloud. Process commands (`process.list/start/stop/restart/delete/logs/deploy`, `server.info`, `server.deploy`) execute through the same daemon that runs your local CLI — the dashboard is just another client of your machine's process engine.
 
 If the agent loses the connection it reconnects automatically with exponential backoff; if the credential is revoked, the agent stops, wipes `cloud.json`, and says so at the terminal.
 

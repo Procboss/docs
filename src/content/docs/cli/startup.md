@@ -20,9 +20,9 @@ You normally never run these commands:
 
 Installs and starts the boot startup service — as your normal user, no root:
 
-- **Linux:** writes and enables a **per-user systemd unit** (`~/.config/systemd/user/pboss.service`) and drives it with `systemctl --user` — no root, no sudo. After the unit comes up, pboss runs `loginctl enable-linger <user>` (best-effort) so the daemon starts at **boot** rather than at your first login; where linger is refused (older systemd / polkit), the install still succeeds and says the daemon will start at first login instead. The start is submitted with `--no-block` and health is verified with a hard deadline — the unit state plus a ping on the socket the unit's daemon actually binds — so `install` always returns; a failing daemon produces a diagnosis (state, socket probe, recent journal output), never a hang.
+- **Linux:** writes and enables a **per-user systemd unit** (`~/.config/systemd/user/pboss.service`) and drives it with `systemctl --user` — no root, no sudo. After bring-up, pboss best-effort runs `loginctl enable-linger <user>` so the daemon starts at **boot** rather than at your first login; where linger is refused (older systemd / polkit), the install still succeeds and says so. The start is `--no-block` with a hard health deadline (unit state + socket ping), so `install` always returns — a failing daemon produces a diagnosis, never a hang.
 - **macOS:** writes and loads a `launchd` LaunchAgent (`~/Library/LaunchAgents/com.pboss.daemon.plist`). No root needed or wanted — sudo is rejected with a re-run hint.
-- **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) that starts the daemon at **this user's logon**. No elevation required for per-user registration; only hosts whose policy refuses it ask for an elevated re-run.
+- **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) that starts the daemon at **this user's logon**, via PowerShell's `Register-ScheduledTask`. No elevation required; only hosts whose policy refuses it ask for an elevated re-run.
 
 ```bash
 pboss startup install
@@ -30,9 +30,9 @@ pboss startup install
 
 Running it under `sudo` is rejected — root has no user systemd session, and a root daemon would split into `/root/.pboss`. Re-run it as yourself; the service runs as the invoking user and uses the same `~/.pboss` data as your daily `pboss` commands.
 
-The generated file detects how pboss was installed and adapts the daemon command accordingly. On a **compiled standalone install** (one-line installer, `build:bin`) the service re-executes the pboss binary itself — `ExecStart=/home/you/.local/bin/pboss __daemon` — because the Bun runtime is embedded in the binary and is not required on the system. On a **script install** (`bun add -g pboss`, npm) the service runs the source on the system Bun runtime — `ExecStart=/home/you/.bun/bin/bun run …/daemon.ts`. The generated file's header comment states which mode was detected.
+The generated file adapts to how pboss was installed: a **compiled standalone install** (one-line installer, `build:bin`) re-executes the pboss binary itself — `ExecStart=/home/you/.local/bin/pboss __daemon` — (Bun is embedded, not required on the system); a **script install** (`bun add -g pboss`, npm) runs the source on the system Bun — `ExecStart=/home/you/.bun/bin/bun run …/daemon.ts`. The header comment states which mode was detected.
 
-The service `PATH` includes the target user's `~/.bun/bin` whenever it exists (even on compiled installs): worker processes inherit the service environment, so anything shelling out to `bun` by name resolves. Independently, the daemon self-heals its `PATH` at startup — daemons started by older service definitions also find Bun after upgrading the binary. See [runtimes](/runtimes) for the full discovery chain.
+The service `PATH` includes the target user's `~/.bun/bin` whenever it exists (workers that shell out to `bun` by name must resolve it), and the daemon self-heals its `PATH` at startup — daemons started by older service definitions also find Bun after an upgrade. See [runtimes](/runtimes) for the full discovery chain.
 
 Bare `pboss startup` does not install anything — it prints the available options (`install` / `uninstall` / `status` / `generate`).
 
@@ -60,7 +60,7 @@ Reboot persistence:
 
 When the service is missing, the report says so and prints the exact install command; saved processes are reported as waiting for the service. When there is nothing saved yet, it says so — starts are saved automatically, so the count appears the moment you run `pboss start`. The socket and dump are read from the home the daemon actually uses (an explicit `PBOSS_HOME` wins; otherwise the current user's `~/.pboss`).
 
-The first `pboss start` on an empty machine also states where persistence stands — one line, only on a TTY (piped output stays clean for scripts): `✓ Persistence on: this process is saved and will come back after reboot` when the boot service is active, or the one command that enables it when it is not. PM2 makes you discover `pm2 startup && pm2 save` after losing processes to a reboot; pboss states its default out loud, once, at the moment it becomes relevant.
+The first `pboss start` on an empty machine states where persistence stands — one line, only on a TTY: `✓ Persistence on: this process is saved and will come back after reboot` when the boot service is active, or the one command that enables it when it is not.
 
 ## pboss startup uninstall (alias: remove)
 

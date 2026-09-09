@@ -48,7 +48,7 @@ JavaScript/TypeScript workers are spawned by the **daemon** — and the daemon o
 4. `/usr/local/bin`, `/usr/bin`, `/opt/bun/bin`
 5. `/opt/homebrew/bin` — macOS Homebrew on Apple Silicon (not on a launchd PATH)
 
-Three layers make this work everywhere. The worker spawn uses the **absolute resolved path** (surviving any PATH). The generated boot service's `PATH` includes the target user's `~/.bun/bin` when present, so workers that call `bun` by name also resolve. And the daemon prepends the discovered bun directory to its own `PATH` at startup, healing daemons that older service definitions started with a minimal PATH. If no Bun exists at all, the error message lists every location that was checked before suggesting `--interpreter node` or `--interpreter none`.
+Three layers make this work everywhere: the worker spawn uses the **absolute resolved path** (surviving any PATH); the boot service's `PATH` includes the user's `~/.bun/bin` when present (workers that call `bun` by name resolve); and the daemon prepends the discovered bun directory to its own `PATH` at startup, healing daemons started by older service definitions. If no Bun exists at all, the error lists every location checked before suggesting `--interpreter node` or `--interpreter none`.
 
 ## Running Python services
 

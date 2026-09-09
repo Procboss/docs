@@ -174,6 +174,18 @@ ok("agent-api: /ws/agent WebSocket documented", agentApi.includes("### GET /ws/a
 ok("agent-api: nine-command whitelist", agentApi.includes("process.deploy"));
 ok("agent-api: server.deploy documented", agentApi.includes("server.deploy"));
 ok("agent-api: log.watch documented", agentApi.includes("log.watch"));
+// 6b. Reliability + security contract of the link (reboot/blackout hardening):
+//     events are acked at-least-once, the watchdog re-dials dead sockets,
+//     and TLS is enforced off-loopback with the 0700 home.
+ok("agent-api: event-ack documented", agentApi.includes("event-ack"));
+ok("agent-api: event outbox / at-least-once described", agentApi.includes("outbox"));
+ok("agent-api: watchdog documented", agentApi.includes("watchdog"));
+ok("agent-api: jittered backoff documented", agentApi.includes("jittered"));
+ok("agent-api: TLS refusal documented", agentApi.includes("PBOSS_CLOUD_ALLOW_INSECURE"));
+ok("agent-api: 0700 home documented", agentApi.includes("0700"));
+ok("link-server: events survive outages", linkServer.includes("delivers any events"));
+ok("link-server: TLS-only claim", linkServer.includes("refused off-loopback"));
+ok("link-server: 0700 home claim", linkServer.includes("0700"));
 ok("link-server: WebSocket link described", linkServer.includes("WebSocket"));
 ok("cloud.md: WebSocket transport described", cloudMain.includes("/ws/agent"));
 ok("cloud.md: deploy commands listed", cloudMain.includes("deploy"));

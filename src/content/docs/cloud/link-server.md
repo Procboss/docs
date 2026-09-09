@@ -69,7 +69,7 @@ Revocation is immediate: the next stream handshake fails with 401, the agent sto
 Yes — that's the point of the link, and it's precise: the command set is exactly the nine `process.*` / `server.*` operations above, executed by the same daemon your local CLI talks to, over the agent's own outbound WebSocket. The cloud can never reach into your network (no inbound ports exist), and revoking the machine kills the channel instantly.
 
 **What if the machine is offline for a while?**
-Nothing breaks. The server shows offline in the fleet view; when it comes back, the agent reconnects automatically (backoff, then steady). The credential has no expiry — revoke it when the machine is decommissioned.
+Nothing breaks. The server shows offline in the fleet view; when it comes back, the agent reconnects automatically (jittered backoff, then steady) and delivers any events that happened while the link was down — crashes included. The credential has no expiry — revoke it when the machine is decommissioned.
 
 **Where do credentials live?**
-`~/.pboss/cloud.json` for the machine (owned by the daemon), `~/.pboss/cloud-user.json` for your user login — both mode 0600, both raw secrets that exist server-side only as hashes.
+`~/.pboss/cloud.json` for the machine (owned by the daemon), `~/.pboss/cloud-user.json` for your user login — both mode 0600 inside the owner-only (0700) `~/.pboss`, both raw secrets that exist server-side only as hashes. The agent only speaks to the cloud over TLS; plaintext URLs are refused off-loopback.

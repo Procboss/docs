@@ -95,10 +95,12 @@ Legacy pasted-token path: exchange a dashboard-minted single-use `pbc_…` token
 
 The **transport** — ONE full-duplex WebSocket, opened by the daemon, authenticated with the machine credential. Everything flows over it:
 
-- **agent → cloud frames**: state reports (every 10s and after each command) — the JSON below; command results — `{ "type": "command-result", "result": … }`; live log lines — `{ "type": "log", … }` (only while a dashboard is tailing).
-- **cloud → agent frames**: commands — `{ "id": "<uuid>", "type": "process.restart", "payload": { "target": "web" } }`; log-tail control — `log.watch` / `log.unwatch` per process.
+- **agent → cloud frames**: state reports (every 10s and after each command) — the JSON below; command results — `{ "type": "command-result", "result": … }`; live log lines — `{ "type": "log", … }` (only while a dashboard is tailing); `pong` — the heartbeat reply.
+- **cloud → agent frames**: commands — `{ "id": "<uuid>", "type": "process.restart", "payload": { "target": "web" } }`; log-tail control — `log.watch` / `log.unwatch` per process; `ping` — the app-level heartbeat (~15s) that arms the agent's dead-socket watchdog; `event-ack` — `{ "ids": ["evt-…"] }`, the receipt for ingested events.
 
-Command types: `process.list`, `process.start`, `process.stop`, `process.restart`, `process.delete`, `process.logs`, `process.deploy`, `server.info`, `server.deploy`. Close code `4001` means revoked — the agent wipes its credential and stops; otherwise the agent reconnects with exponential backoff.
+Command types: `process.list`, `process.start`, `process.stop`, `process.restart`, `process.delete`, `process.logs`, `process.deploy`, `server.info`, `server.deploy`. Close code `4001` means revoked — the agent wipes its credential and stops; otherwise the agent reconnects with jittered exponential backoff, and a socket that goes silent (no frames, no close — NAT timeout, network switch) is closed by the agent's watchdog and re-dialed.
+
+Events in state reports carry a delivery `id`. The agent queues them in an outbox until the cloud acks ingestion (`event-ack`); the cloud dedups by id, so a crash that happens during a network outage is delivered after the reconnect without double-alerting.
 
 The state report frame:
 
@@ -162,5 +164,6 @@ Self-revocation of the presented token (`pboss logout`) — this device only, ne
 - Device codes, machine secrets, and CLI tokens are stored hashed (sha256) server-side; raw forms exist once, in flight, and in the local 0600 files.
 - The credential is minted at claim time and handed over exactly once; codes expire in 10 minutes and can be denied at the approval card.
 - Everything is outbound from the machine: one WebSocket plus HTTPS POSTs. No inbound port ever exists on the agent side.
+- TLS is required: the agent refuses plaintext cloud URLs off-loopback (`PBOSS_CLOUD_ALLOW_INSECURE=1` is the warned opt-out), and `~/.pboss` itself is owner-only (0700) so other local users cannot reach the daemon socket or the credential files.
 - Machine credentials, CLI tokens, and browser sessions are three independent revocable spaces.
-- Remote commands are a fixed nine-operation whitelist executed by the local daemon; every write is ownership-checked server-side.
+- Remote commands are a fixed nine-operation whitelist executed by the local daemon; every write is ownership-checked server-side, and the gateway relays nothing but whitelisted command types.

@@ -32,9 +32,9 @@ The complete set of options available for each entry in the `apps` array:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `name` | `string` | Filename | Process name |
-| `script` | `string` | required | Path to the script to execute |
+| `script` | `string` | required | Path to the script to execute; relative paths resolve against the config file's directory |
 | `args` | `string[]` | `[]` | Arguments passed to the script |
-| `cwd` | `string` | `process.cwd()` | Working directory |
+| `cwd` | `string` | The config file's directory | Working directory for the process |
 | `env` | `Record<string, string>` | `{}` | Environment variables |
 | `instances` | `number` or `"max"` | `1` | Number of instances |
 | `execMode` | `"fork"` or `"cluster"` | `"fork"` | Execution mode |

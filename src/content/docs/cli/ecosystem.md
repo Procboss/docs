@@ -7,6 +7,8 @@ order: 6
 
 An ecosystem file defines your entire application topology in a single configuration. pboss supports JSON and TypeScript ecosystem files.
 
+Relative `script` paths resolve against the ecosystem file's own directory — the same place `cwd` defaults to when left unset — so `pboss start /srv/app/ecosystem.config.json` works from any working directory.
+
 ```bash
 pboss start ecosystem.config.json
 ```

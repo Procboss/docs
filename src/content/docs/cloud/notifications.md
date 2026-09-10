@@ -21,13 +21,18 @@ If the deployment has no bot configured (`TELEGRAM_BOT_TOKEN` unset), the panel 
 
 ### Server-side setup (self-hosters / the bot owner)
 
+The bot's environment is part of the deployment's own `.env` — the file is **untracked** (each deployment keeps its own copy; the key contract lives in the tracked `.env.example.txt` / `.env.example2.txt` templates, and every key added to a local `.env` must be mirrored into both).
+
 ```bash
-# one-time: create the bot with @BotFather, then
-TELEGRAM_BOT_TOKEN=…-… bun scripts/set-telegram-webhook.ts \
+# one-time: create the bot with @BotFather, then put in .env
+#   TELEGRAM_BOT_TOKEN=123456:…           (from @BotFather)
+#   TELEGRAM_WEBHOOK_SECRET=…             (openssl rand -hex 32)
+# and register the webhook:
+bun scripts/set-telegram-webhook.ts \
   --url https://procboss.com
 ```
 
-The script registers `POST /api/integrations/telegram/webhook` with Telegram and sets a shared secret (`TELEGRAM_WEBHOOK_SECRET`): every update Telegram delivers carries the `X-Telegram-Bot-Api-Secret-Token` header, and forged updates are rejected with 401. Without a configured secret the webhook runs in a reduced dev mode — pairing still works (knowing the code is the proof), but `/status` and `/unlink` refuse to run unsigned.
+The script registers `POST /api/integrations/telegram/webhook` with Telegram and sets a shared secret (`TELEGRAM_WEBHOOK_SECRET`): every update Telegram delivers carries the `X-Telegram-Bot-Api-Secret-Token` header, and forged updates are rejected with 401. Without a configured secret the webhook runs in a reduced dev mode — pairing still works (knowing the code is the proof), but `/status` and `/unlink` refuse to run unsigned. One bot token carries ONE webhook URL: registering from a different deployment moves the webhook there, so register from the deployment that should receive your chats' messages.
 
 ## Discord
 

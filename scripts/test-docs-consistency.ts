@@ -4,20 +4,20 @@
  *
  * Owner rule: "For every update, write a test to confirm."
  * Guards the documentation contract of the installer target selection
- * (2026-09-10: /usr/local/bin FIRST when sudo can elevate the binary copy,
- * per-user boot service, ~/.local/bin fallback with PATH self-heal):
+ * (2026-09-10: no root, ever — ~/.local/bin per-user install with an
+ * automatic PATH self-heal in the shell profile, per-user boot service):
  *
  *   1. The retired long "privileges/BUN_INSTALL" explainer paragraphs are
  *      gone (the noise the owner had removed).
  *   2. No sudo command appears in any docs page or pboss DOCS.md/README —
- *      sudo is OPTIONAL and never required; the only tolerated mentions
- *      are prose statements about the optional system-wide binary copy,
- *      negative statements ("no root", "never required"), and the snap
- *      channel, where refreshing is inherently sudo (snapd design).
+ *      sudo is never invoked by the installer; the only tolerated mentions
+ *      are prose statements about the legacy root pipe (running AS root
+ *      still works), negative statements ("no root", "never required"),
+ *      and the snap channel, where refreshing is inherently sudo (snapd
+ *      design).
  *   3. The per-user facts ARE documented: user unit dir, systemctl --user,
- *      enable-linger, ~/.local/bin, %LOCALAPPDATA%\pboss — plus the
- *      /usr/local-bin-first target contract and its PBOSS_INSTALL_DIR /
- *      PBOSS_NO_SUDO overrides.
+ *      enable-linger, ~/.local/bin (with the PATH auto-add),
+ *      %LOCALAPPDATA%\pboss.
  *   4. No stale system-service claims remain (/etc/systemd/system unit,
  *      multi-user.target, system-wide BUN_INSTALL flow).
  *   5. The pboss DOCS.md startup status example matches what the code
@@ -120,18 +120,16 @@ ok("installation: ~/.local/bin fallback documented", installation.includes("~/.l
 ok("installation: %LOCALAPPDATA%\\pboss default", installation.includes("%LOCALAPPDATA%\\pboss"));
 ok("installation: bun add -g without sudo", /```bash\nbun add -g pboss\n```/.test(installation));
 ok("installation: one-liner has no sudo", !/curl -fsSL https:\/\/procboss\.com\/install\.sh \| sudo/.test(installation));
-// The /usr/local/bin-first target contract (owner request 2026-09-10):
-// system-wide when sudo can elevate ONLY the binary, PATH self-heal on the
-// fallback, same-directory refresh on every reinstall/upgrade, overrides.
-ok("installation: /usr/local/bin first when sudo can elevate", installation.includes("`/usr/local/bin` when sudo can elevate the copy"));
-ok("installation: on PATH for every user claim", installation.includes("on PATH for every user"));
-ok("installation: PATH self-heal on the fallback", installation.includes("automatic PATH fix"));
-ok("installation: only the binary is elevated", installation.includes("only the binary is elevated"));
-ok("installation: same-directory refresh documented", installation.includes("same install directory"));
-ok("installation: PBOSS_INSTALL_DIR override documented", installation.includes("PBOSS_INSTALL_DIR"));
-ok("installation: PBOSS_NO_SUDO override documented", installation.includes("PBOSS_NO_SUDO"));
-ok("pboss DOCS.md: target contract mirrored", readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes("`/usr/local/bin` when sudo can elevate the copy"));
-ok("pboss README: target contract mirrored", readFileSync(join(PBOSS, "README.md"), "utf8").includes("`/usr/local/bin` when sudo can elevate the copy"));
+// The no-root target contract (owner request, 2026-09-10): "we still dont
+// need root … if ~/.local/bin is not in PATH in ~/.bashrc, then add it" —
+// the installer NEVER invokes sudo; a missing PATH entry is added to the
+// shell profile automatically instead of noted.
+ok("installation: PATH auto-add on the per-user dir documented", installation.includes("adds it to your `PATH` automatically"));
+ok("installation: no sudo-optional claim", !installation.includes("sudo is optional"));
+ok("installation: no PBOSS_INSTALL_DIR / PBOSS_NO_SUDO overrides", !/PBOSS_(INSTALL_DIR|NO_SUDO)/.test(installation));
+ok("pboss DOCS.md: PATH self-heal mirrored", readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes("adds it to your shell profile"));
+ok("pboss README: PATH self-heal mirrored", readFileSync(join(PBOSS, "README.md"), "utf8").includes("adds it to your shell profile"));
+ok("pboss DOCS.md: no-root contract mirrored", readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes("sudo is never required"));
 ok("startup: per-user systemd unit path", startup.includes("~/.config/systemd/user/pboss.service"));
 ok("startup: systemctl --user", startup.includes("systemctl --user"));
 ok("startup: enable-linger documented", startup.includes("loginctl enable-linger"));

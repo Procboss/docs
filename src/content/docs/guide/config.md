@@ -7,9 +7,11 @@ order: 2
 
 The complete set of options for [ecosystem files](/cli/ecosystem). Every CLI flag from `pboss start` maps to a field here (camelCase instead of kebab-case).
 
+A bare `pboss start` auto-detects the config file to load — the priority order lives in [Ecosystem files](/cli/ecosystem#auto-detection).
+
 ## Ecosystem file format
 
-The ecosystem file is a JSON or TypeScript file with the following top-level structure:
+The ecosystem file is a JSON, JavaScript, or TypeScript file with the following top-level structure:
 
 ```typescript
 interface EcosystemConfig {

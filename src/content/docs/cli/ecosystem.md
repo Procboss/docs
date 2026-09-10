@@ -5,7 +5,7 @@ section: cli
 order: 6
 ---
 
-An ecosystem file defines your entire application topology in a single configuration. pboss supports JSON and TypeScript ecosystem files.
+An ecosystem file defines your entire application topology in a single configuration. pboss supports JSON, JavaScript, and TypeScript ecosystem files.
 
 Relative `script` paths resolve against the ecosystem file's own directory — the same place `cwd` defaults to when left unset — so `pboss start /srv/app/ecosystem.config.json` works from any working directory.
 
@@ -15,6 +15,29 @@ pboss start ecosystem.config.json
 
 ```bash
 pboss start ecosystem.config.ts
+```
+
+## Auto-detection
+
+Run `pboss start` with no target and pboss looks for a config file in the current directory, loading the first one that exists — in this priority order:
+
+1. `ecosystem.config.json` · `ecosystem.config.js` · `ecosystem.config.ts`
+2. `pboss.config.json` · `pboss.config.js` · `pboss.config.ts`
+3. `bm2.config.json` · `bm2.config.js` · `bm2.config.ts`
+4. `pm2.config.json` · `pm2.config.js` · `pm2.config.ts`
+
+```bash
+pboss start   # loads the first config file above
+```
+
+Within a prefix, `.json` beats `.js`, which beats `.ts`. The `pboss`, `bm2`, and `pm2` prefixes mean a project migrating from either naming scheme keeps booting from its existing file.
+
+An explicit target always wins over detection — `pboss start ./server.ts` starts the script, and `pboss start pm2.config.js` loads that file even when an `ecosystem.config.json` sits next to it. When no config file is found, `pboss start` continues to its normal script and name resolution, and only errors when nothing at all can be resolved:
+
+```text
+No PBoss configuration file or application was found.
+
+Please provide a config file, executable script, or application to start.
 ```
 
 ## JSON example

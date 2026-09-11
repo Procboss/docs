@@ -41,7 +41,7 @@ If the deployment has no bot configured (`TELEGRAM_BOT_TOKEN` unset), the panel 
 
 ### Server-side setup (self-hosters / the bot owner)
 
-The bot's environment is part of the deployment's own `.env` — the file is **untracked** (each deployment keeps its own copy; the key contract lives in the tracked `.env.example.txt` / `.env.example2.txt` templates, and every key added to a local `.env` must be mirrored into both).
+The bot's environment is part of the deployment's own `.env` — the file is **untracked** (each deployment keeps its own copy; the key contract and production reference live in the tracked `.env.example.txt` template, and every key added to a local `.env` must be mirrored into it).
 
 ```bash
 # one-time: create the bot with @BotFather, then put in .env

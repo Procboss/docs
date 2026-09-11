@@ -35,6 +35,8 @@ The `/` menu in any chat with the bot lists them (the menu is code-defined — `
 
 Names that exist on more than one server are pinned with `name@server` — the bot's ambiguity reply shows a ready-to-copy example. Control commands (`/restart`, `/stop`, `/kill`) and `/logs` follow the dashboard's plan gates: trials and subscriptions operate, free accounts monitor.
 
+The `/menu` and `/help` replies also carry tappable buttons — Status, Health, Alerts, Logs, Restart, Stop, Kill, Help. Tapping one **sends** the command, exactly as if you had typed it — no copy-paste (the command list in the message body is syntax reference only; Telegram copies code on tap, which is why the buttons exist). A tap rides the same signed webhook and re-runs every guard: linked chat, plan gate, confirmation. The pairing welcome arrives with the same buttons. `/unlink` is deliberately not a button — it disconnects without a confirmation step, so it stays typed.
+
 Every control command carries three guards before anything moves: the update must be **signed** (the webhook secret), the chat must be **linked** to the account that owns the target, and a **confirmation** must complete — a tap on an inline Confirm button (2-minute validity, single-use), or the exact process name typed back for `/kill`. `process.kill` is the SIGKILL path: no graceful shutdown, no cleanup handlers — the process row survives and can be started again.
 
 If the deployment has no bot configured (`TELEGRAM_BOT_TOKEN` unset), the panel says so instead of showing a broken pairing flow.

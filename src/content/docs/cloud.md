@@ -31,6 +31,10 @@ No secrets pasted through terminals, no passwords on the server, codes that expi
 
 Accounts are OAuth-only (GitHub or Google) — the dashboard never sees a password. The sign-in redirect is only ever minted for origins a deployment actually operates: loopback dev hosts, `*.space-z.ai` previews, the `APP_URL` pin, and an allowlist of production hosts (`procboss.com`, `www.procboss.com`, `cloud9000.procboss.com`). A deployment served through another gateway adds it with `OAUTH_ALLOWED_HOSTS` (comma-separated) — otherwise sign-in from that host bounces to `/login?error=unsafe_origin` before the provider is contacted, and a forged `Host` header can never aim the OAuth round-trip at a foreign domain.
 
+## Sign-in hardening
+
+Two further guarantees hold on every sign-in round-trip. The post-login destination (`?next=…`, parked in a cookie for the provider hop) is validated as a same-site relative path — `//evil.com`, `https://…`, and `/\evil` are rejected and the callback falls back to `/dashboard`, so the flow can never be turned into an open redirect. And every response the app sends — the OAuth 307s included — carries the security-header set (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS) from the app itself, with the nginx gateway repeating its edge trio in every `add_header`-carrying location.
+
 ## What the agent does
 
 Once linked, the daemon's cloud agent keeps one **outbound-only WebSocket** (`/ws/agent`): commands flow cloud → machine, state reports (every 10 seconds: server metrics + the process list) flow machine → cloud. Process commands (`process.list/start/stop/restart/delete/logs/deploy`, `server.info`, `server.deploy`) execute through the same daemon that runs your local CLI — the dashboard is just another client of your machine's process engine.

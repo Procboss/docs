@@ -2,7 +2,7 @@
 
 Documentation site for [pboss](https://github.com/Procboss/pboss) (the open-source universal process manager) and [ProcBoss Cloud](https://procboss.com).
 
-Built with **Astro 5 + Tailwind CSS 4**, fully static — 27 HTML pages with only ~1.5 KB of inline progressive-enhancement JavaScript (a dark/light theme switch and copy buttons on code blocks — no framework, no external JS files, site fully readable without JS). Dark/light mode defaults to the system preference, persists the visitor's choice in `localStorage`, and pairs with build-time dual-theme syntax highlighting (Shiki). Hosted on **Cloudflare Pages**.
+Built with **Astro 5 + Tailwind CSS 4**, fully static — 29 HTML pages with only ~5 KB of inline progressive-enhancement JavaScript (code copy buttons + the search modal — no framework, no external JS files, site fully readable without JS). Hosted on **Cloudflare Pages**.
 
 ## Stack
 
@@ -11,8 +11,8 @@ Built with **Astro 5 + Tailwind CSS 4**, fully static — 27 HTML pages with onl
 | Framework | Astro 5 (static output, content collections) |
 | Styling | Tailwind CSS 4 (Vite plugin) + typography plugin |
 | Syntax highlighting | Shiki, dual themes (`github-light` / `github-dark`) switched by CSS custom properties |
-| Search | — (nav-first structure; add Pagefind later if needed) |
-| JS shipped | ~1.5 KB inline: theme toggle + code copy buttons. Mobile nav is a `<details>` element; TOC is plain anchors |
+| Search | [Pagefind](https://pagefind.app/) — static index built into `dist/pagefind/` after `astro build`; custom modal UI, core lazy-loaded only on first search |
+| JS shipped | ~5 KB inline: code copy buttons + search modal. The Pagefind search core (~30 KB gzipped) is fetched only when a visitor actually searches. Mobile nav is a `<details>` element; TOC is plain anchors |
 
 ## Repository layout
 
@@ -32,12 +32,22 @@ src/
 │   ├── recipes.md          # cookbook: prod, watch, cron, deploys, code
 │   └── troubleshooting.md
 ├── layouts/DocLayout.astro # header + sidebar + prose + TOC + prev/next
-├── components/             # Header, Sidebar, Toc, PrevNext,
-│                          # ThemeInit (no-flash theme bootstrap),
-│                          # ClientEnhancements (toggle + copy buttons)
-└── styles/global.css       # Tailwind + shiki dual-theme + prose tweaks
+│                          #   (marks `data-pagefind-body` — the search index scope)
+├── components/             # Header, Sidebar, Toc, PrevNext, Search (Pagefind
+│                          #   modal, ⌘K), ThemeInit, ClientEnhancements
+│                          #   (copy buttons)
+└── styles/global.css       # Tailwind + shiki dual-theme + prose + search styles
 astro.config.mjs            # + custom rehype anchor plugin (github-slugger)
 ```
+
+## Search
+
+Site search is [Pagefind](https://pagefind.app/) with a custom modal UI (`src/components/Search.astro`) — open it from the header button, **⌘K / Ctrl+K**, or `/`. Results are page + section-level, keyboard-navigable (`↑↓` / `↵` / `esc`).
+
+- **Indexing**: `bun run build` runs `astro build && pagefind --site dist` — the index lands in `dist/pagefind/` and deploys as plain static files. Nothing to configure on Cloudflare Pages.
+- **Scope**: `data-pagefind-body` on `<main>` in DocLayout — only page content is indexed (headers/sidebars/TOC stay out); the `<h1>` is the result title; the 404 page is excluded.
+- **Cost**: the search core is imported on the first open of the modal — visitors who never search never download it. Without JavaScript the site is fully readable; the trigger is inert.
+- **Dev server caveat**: `bun run dev` serves no index — the modal explains this honestly. Use `bun run build && bun run preview` to try search locally.
 
 To add a page: drop a Markdown file into `src/content/docs/` with frontmatter `title`, `section` (one of the keys in `src/config.ts`), and `order`. It appears in the sidebar, prev/next, and gets `/slug` routing automatically.
 
@@ -50,7 +60,7 @@ bun run build      # static site in dist/
 bun run preview    # serve dist/ locally
 ```
 
-> When changing `astro.config.mjs` (markdown/rehype settings), clear the render cache: `rm -rf .astro` — Astro's content layer caches rendered Markdown and won't re-render on config changes alone.
+> When changing `astro.config.mjs` (markdown/rehype settings), clear the render cache: `rm -rf .astro node_modules/.astro` — Astro 5's content layer caches rendered Markdown in `node_modules/.astro/` and won't re-render on config changes alone (clearing `.astro` alone is NOT enough; this repo learned it the hard way).
 
 ## Deploying to Cloudflare Pages
 

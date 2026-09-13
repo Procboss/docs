@@ -6,7 +6,7 @@
   "description": "Documentation site for ProcBoss (pboss) and ProcBoss Cloud — Astro + Tailwind, static output for Cloudflare Pages.",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && pagefind --site dist --exclude-selectors .anchor",
     "preview": "astro preview",
     "test": "bun scripts/test-docs-consistency.ts",
     "astro": "astro"
@@ -17,5 +17,8 @@
     "astro": "^5.7.0",
     "github-slugger": "2",
     "tailwindcss": "^4.1.0"
+  },
+  "devDependencies": {
+    "pagefind": "^1.5.2"
   }
 }

@@ -7,7 +7,7 @@ export const siteConfig = {
   name: "ProcBoss Docs",
   /** The product: open-source Bun-native process manager. */
   product: "pboss",
-  productVersion: "v1.2.0",
+  productVersion: "v1.2.8",
   /** Links out. */
   links: {
     /** Open-source CLI repo. */

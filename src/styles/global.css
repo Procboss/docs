@@ -297,3 +297,24 @@ kbd {
   font-style: normal;
   font-weight: 450;
 }
+
+/* ------------------------------------------------------------------ */
+/* search modal (Pagefind) — see components/Search.astro               */
+/*                                                                      */
+/* The result <mark>s come from pagefind's sanitized excerpt HTML (no   */
+/* class hooks), so they are styled here: peach, the same highlight     */
+/* family as ::selection. The active option uses mint, the brand's      */
+/* "selected" color (version sticker, TOC hover).                       */
+/* ------------------------------------------------------------------ */
+
+#pboss-search .search-excerpt :is(mark, .pagefind-mark) {
+  background-color: rgb(255 217 165 / 0.8);
+  color: inherit;
+  border-radius: 0.15rem;
+  padding: 0 0.08em;
+  font-weight: 600;
+}
+
+#pboss-search .search-result[aria-selected="true"] {
+  background-color: #ddf4e7; /* mint-100 */
+}

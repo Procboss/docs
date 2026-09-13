@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from "../config";
+import Search from "./Search.astro";
 
 const { links, product, productVersion } = siteConfig;
 ---
@@ -18,6 +19,7 @@ const { links, product, productVersion } = siteConfig;
     >{productVersion}</span>
 
     <nav class="ml-auto flex items-center gap-1 text-sm">
+      <Search />
       <a
         href="/cli/processes"
         class="hidden rounded-md px-3 py-1.5 font-medium text-stone-600 hover:bg-cream-deep hover:text-ink-950 sm:block"

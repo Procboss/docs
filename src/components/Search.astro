@@ -1,0 +1,249 @@
+---
+/**
+ * Docs search (Pagefind) — progressive enhancement, site-wide.
+ *
+ * The trigger button lives in the header (see Header.astro); the modal and
+ * the wiring live here. Pagefind indexes the BUILT site at `bun run build`
+ * time (dist/pagefind/), so the search core is imported lazily on the first
+ * open — visitors who never search download nothing beyond this ~4 KB inline
+ * script. Without JavaScript the site stays fully readable; the trigger is
+ * simply inert (honest progressive enhancement, same contract as the copy
+ * buttons in ClientEnhancements.astro).
+ *
+ * Index scope is `data-pagefind-body` on <main> in DocLayout.astro (page
+ * content only — headers/sidebars/TOC are excluded), with the page <h1> as
+ * the result title via data-pagefind-meta.
+ */
+---
+
+<!-- trigger: rendered by Header.astro at the top of the nav -->
+<button
+  type="button"
+  id="pboss-search-trigger"
+  aria-label="Search the docs"
+  aria-haspopup="dialog"
+  class="flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-md border-2 border-ink-950/25 bg-paper text-stone-500 transition-colors hover:border-ink-950 hover:text-ink-950 sm:w-auto sm:justify-start sm:px-3 sm:text-[13px] sm:font-medium"
+>
+  <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+    <circle cx="11" cy="11" r="7"></circle>
+    <path stroke-linecap="round" d="m19 19-3.5-3.5"></path>
+  </svg>
+  <span class="hidden md:inline">Search</span>
+  <kbd class="search-kbd hidden rounded border border-ink-950/25 bg-cream px-1.5 py-px font-mono text-[10px] font-semibold text-stone-500 md:inline">⌘K</kbd>
+</button>
+
+<!-- modal -->
+<div id="pboss-search" hidden class="fixed inset-0 z-50">
+  <div id="pboss-search-backdrop" class="fixed inset-0 bg-ink-950/40" aria-hidden="true"></div>
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label="Search the docs"
+    class="fixed left-1/2 top-[10vh] w-[min(92vw,36rem)] -translate-x-1/2 overflow-hidden rounded-xl border-2 border-ink-950 bg-paper shadow-brutal"
+  >
+    <div class="flex items-center gap-3 border-b-2 border-ink-950 px-4">
+      <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-stone-400" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path stroke-linecap="round" d="m19 19-3.5-3.5"></path>
+      </svg>
+      <input
+        id="pboss-search-input"
+        type="text"
+        class="h-12 min-w-0 flex-1 bg-transparent text-[15px] text-ink-950 outline-none placeholder:text-stone-400"
+        placeholder="Search the docs…"
+        aria-label="Search query"
+        aria-controls="pboss-search-body"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <kbd class="shrink-0 rounded border border-ink-950/25 bg-cream px-1.5 py-px font-mono text-[10px] font-semibold text-stone-500">esc</kbd>
+    </div>
+
+    <div id="pboss-search-body" role="listbox" aria-label="Search results" class="max-h-[60vh] overflow-y-auto overscroll-contain py-2"></div>
+
+    <div class="border-t-2 border-ink-950/15 bg-cream px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+      <span aria-hidden="true">↑↓ navigate</span> · <span aria-hidden="true">↵ open</span> · <span aria-hidden="true">esc close</span>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const modal = document.getElementById("pboss-search");
+    if (!modal) return;
+    const trigger = document.getElementById("pboss-search-trigger");
+    const backdrop = document.getElementById("pboss-search-backdrop");
+    const input = document.getElementById("pboss-search-input");
+    const body = document.getElementById("pboss-search-body");
+
+    /* the platform-appropriate hint in the trigger + shortcuts below */
+    const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    document.querySelectorAll(".search-kbd").forEach((k) => (k.textContent = isMac ? "⌘K" : "Ctrl+K"));
+
+    let pagefind = null; /* null = not loaded, false = unavailable */
+    let seq = 0; /* latest-search-wins guard */
+    let results = []; /* DOM anchors, keyboard-navigable */
+    let active = -1;
+
+    const status = (msg) => {
+      body.innerHTML = "";
+      results = [];
+      active = -1;
+      input.removeAttribute("aria-activedescendant");
+      if (msg) {
+        const p = document.createElement("p");
+        p.className = "px-4 py-6 text-center text-[13px] leading-relaxed text-stone-500";
+        p.textContent = msg;
+        body.appendChild(p);
+      }
+    };
+
+    const loadPagefind = async () => {
+      if (pagefind !== null) return pagefind;
+      try {
+        pagefind = await import("/pagefind/pagefind.js");
+      } catch {
+        pagefind = false; /* dev server: no index until `bun run build` */
+      }
+      return pagefind;
+    };
+
+    const setActive = (i) => {
+      if (!results.length) return;
+      active = (i + results.length) % results.length;
+      results.forEach((r, j) => {
+        r.setAttribute("aria-selected", j === active ? "true" : "false");
+        if (j === active) r.scrollIntoView({ block: "nearest" });
+      });
+      input.setAttribute("aria-activedescendant", results[active].id);
+    };
+
+    const render = (items, query) => {
+      body.innerHTML = "";
+      results = [];
+      active = -1;
+      input.removeAttribute("aria-activedescendant");
+      if (!items.length) {
+        status('No results for “' + query + '”.');
+        return;
+      }
+      items.forEach((d, i) => {
+        const crumb = (d.url || "").replace(/^\/+|\/+$/g, "");
+        const a = document.createElement("a");
+        a.href = d.url;
+        a.id = "pboss-search-option-" + i;
+        a.setAttribute("role", "option");
+        a.setAttribute("aria-selected", "false");
+        a.className =
+          "search-result block border-b border-ink-950/10 px-4 py-2.5 last:border-b-0 focus-visible:bg-mint-100 focus-visible:outline-none";
+
+        const head = document.createElement("div");
+        head.className = "flex items-baseline justify-between gap-3";
+        const title = document.createElement("span");
+        title.className = "min-w-0 truncate text-[14px] font-semibold text-ink-950";
+        title.textContent = (d.meta && d.meta.title) || crumb || d.url || "Untitled";
+        const path = document.createElement("span");
+        path.className = "shrink-0 font-mono text-[10px] uppercase tracking-wide text-stone-400";
+        path.textContent = crumb;
+        head.append(title, path);
+
+        const excerpt = document.createElement("p");
+        excerpt.className = "search-excerpt mt-1 text-[12.5px] leading-snug text-stone-600";
+        /* pagefind generates the excerpt from indexed text, sanitized to
+           contain nothing but <mark> — safe to trust */
+        excerpt.innerHTML = d.excerpt || "";
+
+        a.append(head, excerpt);
+
+        /* section-level sub-results, when the index provides them */
+        const subs = Array.isArray(d.sub_results)
+          ? d.sub_results.filter((s) => s && s.url && s.url !== d.url)
+          : [];
+        if (subs.length) {
+          const wrap = document.createElement("div");
+          wrap.className = "mt-1.5 flex flex-col items-start gap-0.5 border-l-2 border-ink-950/15 pl-2.5";
+          subs.slice(0, 4).forEach((s) => {
+            const sa = document.createElement("a");
+            sa.href = s.url;
+            sa.className = "text-[12px] font-medium text-stone-500 hover:text-ink-950 hover:underline";
+            sa.textContent = "↳ " + ((s.title || "").trim() || s.url);
+            sa.addEventListener("click", (e) => e.stopPropagation()); /* navigate, don't just select */
+            wrap.appendChild(sa);
+          });
+          a.appendChild(wrap);
+        }
+
+        a.addEventListener("mousemove", () => {
+          const idx = results.indexOf(a);
+          if (idx !== -1 && idx !== active) setActive(idx);
+        });
+        body.appendChild(a);
+        results.push(a);
+      });
+      setActive(0);
+    };
+
+    let debounce = null;
+    const search = async (query) => {
+      const q = query.trim();
+      if (!q) return status("Type to search the docs — every page, every section.");
+      const pf = await loadPagefind();
+      if (!pf) return status("Search index unavailable — this is the dev server. Run `bun run build` and `bun run preview` to search.");
+      const id = ++seq;
+      const res = await pf.search(q);
+      if (id !== seq) return; /* a newer keystroke already won */
+      const top = res.results.slice(0, 8);
+      const data = await Promise.all(top.map((r) => r.data()));
+      if (id !== seq) return;
+      render(data, q);
+    };
+
+    input.addEventListener("input", () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => search(input.value), 140);
+    });
+
+    const open = () => {
+      modal.hidden = false;
+      document.documentElement.style.overflow = "hidden";
+      input.focus();
+      input.select();
+      loadPagefind();
+      if (!input.value) status("Type to search the docs — every page, every section.");
+    };
+    const close = () => {
+      modal.hidden = true;
+      document.documentElement.style.overflow = "";
+      trigger && trigger.focus();
+    };
+
+    trigger && trigger.addEventListener("click", open);
+    backdrop.addEventListener("click", close);
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        modal.hidden ? open() : close();
+      } else if (e.key === "/" && modal.hidden && !/^(input|textarea|select)$/i.test((e.target.tagName || ""))) {
+        e.preventDefault();
+        open();
+      } else if (!modal.hidden) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          close();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setActive(active + 1);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setActive(active - 1);
+        } else if (e.key === "Enter") {
+          if (results[active]) {
+            e.preventDefault();
+            window.location.assign(results[active].href);
+          }
+        }
+      }
+    });
+  })();
+</script>

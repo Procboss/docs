@@ -12,6 +12,17 @@ import GithubSlugger from "github-slugger";
  * sequences are identical).
  */
 function anchorHeadings() {
+  /** Full rendered text of a hast node — INCLUDING inline elements
+   * (code spans, links). Astro's own slugger uses full text; matching it
+   * keeps ids stable for headings like `Member-exit policy: \`onNsMemberExit\``
+   * (text-node-only slugging produced trailing-dash ids and broke the
+   * cross-page anchors that link to them). */
+  const textOf = (node) =>
+    Array.isArray(node.children)
+      ? node.children.map(textOf).join("")
+      : node.type === "text"
+        ? node.value
+        : "";
   return (tree) => {
     const slugger = new GithubSlugger();
     const walk = (node) => {
@@ -19,15 +30,16 @@ function anchorHeadings() {
       if (node.type !== "element") return;
       if (node.tagName !== "h2" && node.tagName !== "h3") return;
       if (node.properties?.id) return; // already slugged
-      const text = node.children
-        .filter((c) => c.type === "text")
-        .map((c) => c.value)
-        .join("");
-      const id = slugger.slug(text);
+      const id = slugger.slug(textOf(node));
       node.properties = { ...node.properties, id };
       node.children.push({
         type: "element",
         tagName: "a",
+        // NOTE: the decorative "#" must stay out of the search index (it
+        // pollutes sub-result titles and excerpts). Astro's markdown
+        // serializer drops data-* attributes from rehype properties, so
+        // this is handled at the pagefind CLI layer instead:
+        //   --exclude-selectors .anchor   (see package.json build script)
         properties: { class: "anchor", href: `#${id}`, ariaLabel: "Link to this section" },
         children: [{ type: "text", value: "#" }],
       });

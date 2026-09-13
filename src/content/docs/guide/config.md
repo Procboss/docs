@@ -50,6 +50,7 @@ The complete set of options available for each entry in the `apps` array:
 | `interpreterArgs` | `string[]` | — | Arguments for the interpreter |
 | `nodeArgs` | `string[]` | — | Additional runtime arguments |
 | `namespace` | `string` | — | Namespace for grouping processes |
+| `onNsMemberExit` | `"ignore"` or `"exit"` | `ignore` | Reaction to a namespace sibling's terminal exit (namespaced processes only; see [Processes — Namespaces](/cli/processes)) |
 | `sourceMapSupport` | `boolean` | `false` | Enable source map support |
 | `waitReady` | `boolean` | `false` | Wait for process to emit ready signal |
 | `listenTimeout` | `number` | `3000` | Timeout when waiting for ready signal |

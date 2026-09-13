@@ -48,7 +48,11 @@ pboss is a daemonized process manager: a CLI in the front, one long-running daem
 
 **Daemon process** — the daemon is a long-running Bun process that manages all child processes. It listens on a Unix domain socket at `~/.pboss/daemon.sock` for commands from the CLI. The daemon is automatically started when you first run a pboss command, and can be explicitly killed with `pboss kill`.
 
-**Process container** — each managed process is wrapped in a ProcessContainer that handles spawning via `Bun.spawn`, log piping, monitoring, restart logic, health checking, watch mode, and signal handling. One container per process; the daemon supervises them all.
+**Process container** — each managed process is wrapped in a ProcessContainer that handles spawning via `Bun.spawn`, log piping, monitoring, restart logic, health checking, watch mode, and signal handling. One container per process; the daemon supervises them all. Containers also report **terminal exits** (a stop, or a crash after the restart budget is exhausted) — but not pboss-initiated stops and not crashes that auto-restart is already handling — so the ProcessManager can evaluate the namespace member-exit policy without ever cascading.
+
+**Namespace lifecycle** — the ProcessManager treats a namespace as one lifecycle unit ([#31](https://github.com/Procboss/pboss/issues/31)): standalone (namespace-less) processes stay fully independent, while a namespace starts **atomically**. Rollback is invocation-scoped — only members the current operation started may be stopped; already-running members are never touched, and rollback is best-effort in reverse start order with the original failure staying the primary error.
+
+**Namespace coordination** — namespace-scoped operations (start/resume/restart/stop/reload/delete) serialize through per-namespace promise-chain locks: two terminals cannot interleave a restart and a stop on the same group, while different namespaces stay independently operable. The `onNsMemberExit` policy (`ignore` default, or `exit`) stops a namespaced process when a sibling exits for good. Membership and the policy persist in the process dump, so both survive daemon restarts.
 
 **IPC protocol** — the CLI and daemon communicate over WebSocket on a Unix socket. Messages are JSON-encoded with a `type` field for routing and an `id` field for request-response correlation. This is the same protocol the [programmatic API](/guide/programmatic-api) rides on — `pboss.send()` gives you direct access to it.
 
@@ -64,6 +68,7 @@ pboss is a daemonized process manager: a CLI in the front, one long-running daem
 - **Cheap commands** — the CLI is a thin client: it formats a JSON message and prints the response. Command startup cost doesn't scale with the number of processes.
 - **Fast by construction** — `Bun.spawn` for orchestration, `Bun.serve` for HTTP/WebSocket, `Bun.file` for I/O, `Bun.gzipSync` for log compression. The whole daemon starts in under 50ms and idles around ~12MB of RAM.
 - **Supervision that outlives your shell** — because the daemon is detached, processes keep running (and keep being restarted) after your SSH session ends.
+- **Explicit group semantics** — a namespace is an opt-in lifecycle boundary, not ambient coupling: standalone processes stay independent, and grouped processes get atomic startup, invocation-scoped rollback, serialized operations, and an explicit member-exit policy. Nothing cascades unless you ask for it.
 
 ## Development setup
 

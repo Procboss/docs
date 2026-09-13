@@ -88,11 +88,13 @@ Every CLI command has a method twin:
 | Daemon | `ping()`, `kill()`, `daemonReload()` |
 | Low-level | `send(message: DaemonMessage)` — arbitrary daemon messages over the Unix socket |
 
-Targets accept a **namespace** everywhere — `"my-app"` operates on the whole group, with a clear not-found error for unknown targets instead of a silent no-op. `startTarget` resumes stopped members by name or namespace without creating anything new:
+Targets accept a **namespace** everywhere — `"my-app"` operates on the whole group, with a clear not-found error for unknown targets instead of a silent no-op. `startTarget` resumes stopped members by name or namespace without creating anything new — a namespace resume is **atomic** ([#31](https://github.com/Procboss/pboss/issues/31)): if any member fails, only the members that call started are rolled back:
 
 ```ts
-await pboss.startTarget("stellarforge"); // every stopped member comes back online
+await pboss.startTarget("stellarforge"); // every stopped member comes back online — atomically
 ```
+
+The same atomicity governs `startEcosystem` (standalone apps independent, each namespace one atomic group) and namespace-level `restart` — see [Processes — Namespaces](/cli/processes#namespaces). `start(options)` accepts `onNsMemberExit: "ignore" | "exit"`, the programmatic form of the `--on-ns-member-exit` flag.
 
 `streamLogs` is the programmatic tail:
 

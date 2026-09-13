@@ -146,6 +146,28 @@ Run the same topology under different env vars by declaring one entry per enviro
 
 Then target a single group by name: `pboss restart api-staging`.
 
+## Namespace boundaries ([#31](https://github.com/Procboss/pboss/issues/31))
+
+`pboss start ecosystem.config.*` uses the `namespace` field to divide the topology into lifecycle boundaries:
+
+- Apps **without** a namespace are standalone and independent — a failure is reported, but the start sweep continues: no rollback, no blocking of the other apps.
+- Apps sharing a **namespace** form one lifecycle group, started **atomically** at the namespace's first-declaration position (members may be declared non-contiguously — they still form one group). If any member fails, the members that invocation started are rolled back; already-running members are never touched.
+
+A namespace failure never affects other namespaces or standalone apps, and the overall command reports every failure after starting everything startable:
+
+```text
+api                     online   (standalone — unaffected)
+shop
+├── shop-api            rolled back
+├── shop-worker         rolled back
+└── shop-scheduler      failed
+admin
+├── admin-api           online   (other namespace — unaffected)
+└── admin-worker        online
+```
+
+Members can also react to a sibling's terminal exit with the [`onNsMemberExit`](/cli/processes#member-exit-policy-onnsmemberexit) policy — `"ignore"` (default) or `"exit"`, which stops the other running members so the namespace runs complete or not at all.
+
 ## What's available per app
 
 Every field in the `apps` array mirrors a `pboss start` flag — the full mapping lives in the [configuration reference](/guide/config). The `deploy` block is consumed by [`pboss deploy`](/cli/deploy).

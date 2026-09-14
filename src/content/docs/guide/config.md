@@ -89,6 +89,23 @@ Cluster semantics and per-worker environment variables are covered in [Cluster m
 | `healthCheckTimeout` | `number` | `5000` | Probe timeout in ms |
 | `healthCheckMaxFails` | `number` | `3` | Consecutive failures before restart |
 
+A failing health check also reports to the cloud (`health.failing` / `health.recovered` events, with the consecutive-failure count) — the dashboard's process rows show a health chip for any process with a `healthCheckUrl`.
+
+## Alert options
+
+Per-process overrides for the resource threshold alerts ([details](/cloud/alerts)):
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `alertCpuSpikePercent` | `number` | `95` | CPU spike trigger (percent) |
+| `alertCpuSustainedPercent` | `number` | `70` | Sustained CPU trigger (percent) |
+| `alertMemSpikeGrowthPercent` | `number` | `40` | Memory growth rate that counts as a leak (percent per 60s) |
+| `alertMemHighPercent` | `number` | `85` | Memory-high trigger, percent of `maxMemoryRestart` |
+| `alertMemHighMB` | `number` | — | Absolute memory ceiling (MB) when no `maxMemoryRestart` is set — opts this process into the memory-high alert |
+| `alertDisabled` | `boolean` | `false` | Opt this process out of ALL threshold alerts |
+
+These persist with the process and survive restarts; `pboss alerts show` renders the effective merge of defaults, machine overrides (`~/.pboss/alert-thresholds.json`) and these fields.
+
 ## Watch options
 
 | Option | Type | Default | Description |

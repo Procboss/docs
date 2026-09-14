@@ -95,14 +95,26 @@ Legacy pasted-token path: exchange a dashboard-minted single-use `pbc_…` token
 
 The **transport** — ONE full-duplex WebSocket, opened by the daemon, authenticated with the machine credential. Everything flows over it:
 
-- **agent → cloud frames**: state reports (every 10s and after each command) — the JSON below; command results — `{ "type": "command-result", "result": … }`; live log lines — `{ "type": "log", … }` (only while a dashboard is tailing); `pong` — the heartbeat reply.
-- **cloud → agent frames**: commands — `{ "id": "<uuid>", "type": "process.restart", "payload": { "target": "web" } }`; `hello` — the registration ack: it confirms the authenticated upstream is real, which is what flips the agent to `connected`; log-tail control — `log.watch` / `log.unwatch` per process; `ping` — the app-level heartbeat (~15s) that arms the agent's dead-socket watchdog; `event-ack` — `{ "ids": ["evt-…"] }`, the receipt for ingested events.
+- **agent → cloud frames**: state reports (every 10s and after each command) — the JSON below; command results — `{ "type": "command-result", "result": … }`; live log lines — `{ "type": "log", … }` (only while a dashboard is tailing); `metrics.backfill` — one frame per reconnect with a resampled slice of the agent's local metric history covering the outage gap (bounded to 360 samples); `pong` — the heartbeat reply.
+- **cloud → agent frames**: commands — `{ "id": "<uuid>", "type": "process.restart", "payload": { "target": "web" }, "issuedBy": "user_…" }` (`issuedBy` is the cloud-stamped audit identity; the agent echoes it back unmodified on the result); `hello` — the registration ack: it confirms the authenticated upstream is real, which is what flips the agent to `connected`; log-tail control — `log.watch` / `log.unwatch` per process; `ping` — the app-level heartbeat (~15s) that arms the agent's dead-socket watchdog; `event-ack` — `{ "ids": ["evt-…"] }`, the receipt for ingested events.
 
-Command types: `process.list`, `process.start`, `process.stop`, `process.restart`, `process.kill` (force-stop — SIGKILL, no graceful window; the process row survives), `process.delete`, `process.logs`, `process.deploy`, `server.info`, `server.deploy`. Close code `4001` means revoked — the agent wipes its credential and stops; close code `1000` with reason `replaced` means another connection claimed the slot (two daemons sharing one credential — `pboss cloud status` says exactly that); otherwise the agent reconnects with jittered exponential backoff, and a socket that goes silent (no frames, no close — NAT timeout, network switch) is closed by the agent's watchdog and re-dialed.
+**Command types:**
+
+- Lifecycle — `process.list`, `process.start`, `process.stop`, `process.restart`, `process.kill` (force-stop; the row survives), `process.delete`, `process.deploy`, `process.scale` (instance count without a full restart)
+- Remote ops — `server.info`, `server.deploy`, `process.exec` (ONE command in a process's cwd; hard timeout, capped output), `log.search` (time-ranged regex across rotated + gzipped logs)
+- Groups — `namespace.start` / `namespace.stop` / `namespace.restart` (bounce a whole namespace together)
+- Scheduled jobs — `cron.list`, `cron.run` (fire now), `cron.enable`, `cron.disable`
+- Env — `env.get` (keys only by default; values redacted unless `values: true`), `env.set` (write vars, optionally restart)
+- Alerting — `config.alerts.get` / `config.alerts.set` (read/write the threshold document live)
+- Auto-deploy — `process.gitinfo`, `deploy.run`, `deploy.cancel`
+
+Close code `4001` means revoked — the agent wipes its credential and stops; close code `1000` with reason `replaced` means another connection claimed the slot (two daemons sharing one credential — `pboss cloud status` says exactly that); otherwise the agent reconnects with jittered exponential backoff, and a socket that goes silent (no frames, no close — NAT timeout, network switch) is closed by the agent's watchdog and re-dialed.
 
 **Authentication transports.** The dial carries the machine credential as an `Authorization` header AND as the `?agent=` query parameter: some reverse proxies (preview tunnels, corporate gateways) strip the header from WebSocket upgrades while forwarding the URL; the cloud reads whichever arrives. `hello` confirms the authenticated upstream: until it arrives, an open socket is unproven — a proxy can answer the upgrade itself and never dial the origin (a "mirage" open), so the agent sends nothing and stays `connecting…`; no `hello` in 10 seconds forces a redial, and only a confirmed link resets the backoff.
 
 Events in state reports carry a delivery `id`. The agent queues them in an outbox until the cloud acks ingestion (`event-ack`); the cloud dedups by id, so a crash that happens during a network outage is delivered after the reconnect without double-alerting.
+
+**Event kinds.** Lifecycle: `crash`, `restart`, `online`, `stopped`. Resource thresholds (the agent-side detector — see [threshold alerts](/cloud/alerts)): `cpu.spike`, `cpu.sustained`, `mem.spike`, `mem.high`, `restart.loop`, `eventloop.latency`, `handles.leak`, `system.cpu.high`, `system.mem.high`, and the matching `*.recovered` kinds (server-wide events use the `__system__` process name). Health checks: `health.failing`, `health.recovered`. Cron jobs: `cron.failed`, `cron.completed`. Threshold events carry `metricValue`, `thresholdValue`, and (on recovery) `durationSec`; crash events carry a best-effort `reason` ("likely OOM", "uncaught exception") derived from the exit facts.
 
 The state report frame:
 
@@ -114,21 +126,23 @@ The state report frame:
   "os": "linux",
   "arch": "x64",
   "bunVersion": "1.2.20",
-  "agentVersion": "pboss/1.2.0",
+  "agentVersion": "pboss/1.4.0",
   "cpu": 12,
   "memUsed": 800,
   "memTotal": 4000,
   "processes": [
     { "name": "web", "script": "server.ts", "pmId": 0, "status": "online",
-      "cpu": 5, "mem": 120, "restarts": 0, "crashes": 0, "uptimeSec": 3600 }
+      "cpu": 5, "mem": 120, "restarts": 0, "crashes": 0, "uptimeSec": 3600,
+      "healthStatus": "healthy", "healthFails": 0 }
   ],
   "events": [
-    { "kind": "crash", "process": "web", "at": 1690000000000, "detail": "process errored" }
+    { "kind": "crash", "process": "web", "at": 1690000000000, "detail": "process errored",
+      "exitCode": 137, "reason": "likely OOM" }
   ]
 }
 ```
 
-Crash events become alert rows (with exit code, signal, and a log tail for crash reports).
+`healthStatus` / `healthFails` appear only for processes with a `healthCheckUrl` configured (`"healthy"` | `"unhealthy"` | `"unknown"` — unknown until the first probe completes). Crash events become alert rows (with exit code, signal, reason, and a log tail for crash reports); threshold, health, and cron events become alert rows or notifications per their severity.
 
 ### POST /api/agent/servers
 

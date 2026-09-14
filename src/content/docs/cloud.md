@@ -37,9 +37,11 @@ Two further guarantees hold on every sign-in round-trip. The post-login destinat
 
 ## What the agent does
 
-Once linked, the daemon's cloud agent keeps one **outbound-only WebSocket** (`/ws/agent`): commands flow cloud → machine, state reports (every 10 seconds: server metrics + the process list) flow machine → cloud. Process commands (`process.list/start/stop/restart/delete/logs/deploy`, `server.info`, `server.deploy`) execute through the same daemon that runs your local CLI — the dashboard is just another client of your machine's process engine.
+Once linked, the daemon's cloud agent keeps one **outbound-only WebSocket** (`/ws/agent`): commands flow cloud → machine, state reports (every 10 seconds: server metrics + the process list, with health-check status) flow machine → cloud. Process commands (`process.list/start/stop/restart/delete/logs/deploy/scale/exec`, `server.info`, `server.deploy`), namespace group operations, cron job control, env management, log search across rotated files, and threshold-alert configuration all execute through the same daemon that runs your local CLI — the dashboard is just another client of your machine's process engine.
 
-If the agent loses the connection it reconnects automatically with exponential backoff; if the credential is revoked, the agent stops, wipes `cloud.json`, and says so at the terminal.
+The agent also **detects resource conditions itself** — CPU spikes, memory leaks, restart loops, blocked event loops, handle growth, and server-wide pressure — and pushes those events up the same reliable pipeline; see [threshold alerts](/cloud/alerts). Crash events carry a best-effort reason ("likely OOM", "uncaught exception"), and cron job failures page you through the same channels.
+
+If the agent loses the connection it reconnects automatically with exponential backoff (and sends one metrics backfill frame covering the gap when it returns); if the credential is revoked, the agent stops, wipes `cloud.json`, and says so at the terminal.
 
 ## Plans
 
@@ -48,5 +50,6 @@ ProcBoss Cloud pricing and tier details live on [procboss.com](https://procboss.
 ## Where to go next
 
 - [Linking a server](/cloud/link-server) — the device flow, the two credential spaces, and the security model in detail.
+- [Threshold alerts](/cloud/alerts) — what the agent detects, the default thresholds, and how to override them.
 - [Notifications](/cloud/notifications) — connect Telegram and Discord, alert preferences, and the webhook security model.
 - [Agent API](/cloud/agent-api) — the HTTP surface a linked agent speaks, for custom integrations and self-hosting.

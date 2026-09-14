@@ -95,3 +95,19 @@ pboss_system_load_average{period="15m"} 1.67
 ```
 
 For continuous scraping, the dashboard also serves this format at `http://localhost:9616/metrics` — see [Prometheus & Grafana](/guide/prometheus).
+
+## pboss alerts
+
+Resource threshold alerts — the daemon detects CPU spikes, sustained CPU, memory leaks and near-limit memory, restart loops, blocked event loops, handle growth, and server-wide pressure, with hysteresis so nothing flaps. Every threshold is overridable.
+
+```bash
+pboss alerts show                   # effective thresholds (defaults + overrides)
+pboss alerts set my-api --cpu-spike 90
+pboss alerts set --system --cpu 80 --mem-free-pct 15
+pboss alerts reset my-api           # back to defaults (or --system / all)
+pboss alerts test api cpu           # fire a synthetic alert end-to-end
+```
+
+`alerts test` runs one synthetic event through the real delivery chain — outbox, cloud ack, your Telegram/Discord channels — the fastest way to verify an integration without waiting for a real spike. Detection works with or without a cloud link; with no link, test alerts queue and deliver on the next reconnect.
+
+Thresholds come from three merged sources: the built-in defaults, the machine file (`~/.pboss/alert-thresholds.json`), and per-process ecosystem fields (`alertCpuSpikePercent` and friends — see [config reference](/guide/config)). The full story, including every default, lives in [Threshold alerts](/cloud/alerts).

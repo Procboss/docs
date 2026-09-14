@@ -56,6 +56,10 @@ pboss is a daemonized process manager: a CLI in the front, one long-running daem
 
 **IPC protocol** — the CLI and daemon communicate over WebSocket on a Unix socket. Messages are JSON-encoded with a `type` field for routing and an `id` field for request-response correlation. This is the same protocol the [programmatic API](/guide/programmatic-api) rides on — `pboss.send()` gives you direct access to it.
 
+**Event system** — the ProcessManager is the canonical event source ([#32](https://github.com/Procboss/pboss/issues/32)): every ProcessContainer state transition, operator-initiated or autonomous (crash autorestart, `maxMemoryRestart`, watch, cron, health-check), is funneled through it as a typed `process:*` event with its cause and a fresh state snapshot. Modules subscribe directly via `pm.on(...)`.
+
+**Event transport** — remote clients receive the same events over the daemon's SSE-style stream (`subscribeEvents`, the same `ReadableStream` mechanism `streamLogs` uses). Aborting the request detaches the daemon-side listener, so neither side leaks; the stream ending under a live connection surfaces as `daemon:disconnected`.
+
 **Dashboard** — served by a `Bun.serve` instance with WebSocket upgrade support. A single HTTP server handles the dashboard UI, the [REST API](/guide/dashboard-api), and WebSocket connections.
 
 **Metrics server** — a separate `Bun.serve` instance on port 9616 serves Prometheus metrics, keeping the scrape endpoint isolated from dashboard traffic. See [Prometheus & Grafana](/guide/prometheus).

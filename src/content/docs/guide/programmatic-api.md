@@ -106,37 +106,56 @@ await pboss.streamLogs("my-api", (log) => {
 
 ## Events
 
-The `PBoss` class extends `EventEmitter` and emits typed events:
+The `PBoss` class extends `EventEmitter`. Since issue #32, `process:*` events are **real daemon state changes**, not echoes of your own calls: every event originates in the daemon's `ProcessManager` and reaches every subscribed client over a persistent stream that `connect()` opens. If client A restarts a process, client B hears `process:restart`; a crash-triggered autorestart fires events nobody asked for.
+
+Each `process:*` event carries one `PbossProcessEvent` (one event = one process):
+
+| Field | Description |
+|---|---|
+| `event` | The event name (identical to the key you subscribed to) |
+| `source` | What caused it: `user`, `crash`, `memory`, `watch`, `cron`, `health`, `policy`, or `system` (boot resurrect) |
+| `at` | Epoch milliseconds at emit time |
+| `process` | Fresh `ProcessState` snapshot of the affected process |
+| `exitCode` / `exitSignal` | `process:crashed` — raw exit facts |
+| `willRestart` | `process:crashed` — was an autorestart scheduled? |
+| `reason` | Human-readable detail (e.g. the give-up reason on `process:errored`) |
 
 | Event | Payload | Description |
 |---|---|---|
 | `daemon:connected` | — | Daemon connection established |
-| `daemon:disconnected` | — | Client disconnected from daemon |
+| `daemon:disconnected` | — | Client disconnected, or the stream ended because the daemon died |
 | `daemon:launched` | `pid: number` | Daemon was spawned by this client |
 | `daemon:killed` | — | Daemon was killed via `kill()` |
 | `error` | `error: Error` | Transport or polling error |
-| `process:start` | `processes: ProcessState[]` | Process(es) started |
-| `process:stop` | `processes: ProcessState[]` | Process(es) stopped |
-| `process:restart` | `processes: ProcessState[]` | Process(es) restarted |
-| `process:reload` | `processes: ProcessState[]` | Process(es) reloaded |
-| `process:delete` | `processes: ProcessState[]` | Process(es) deleted |
-| `process:scale` | `processes: ProcessState[]` | Process group scaled |
-| `metrics` | `snapshot: MetricSnapshot` | Metrics snapshot received |
+| `process:start` | `event: PbossProcessEvent` | A process actually came online (start / resume / resurrect / scale-up) |
+| `process:stop` | `event: PbossProcessEvent` | pboss deliberately stopped it (user op or namespace policy) |
+| `process:restart` | `event: PbossProcessEvent` | Back online after a restart — manual or autonomous, see `source` |
+| `process:crashed` | `event: PbossProcessEvent` | Exited on its own (NOT a pboss stop); check `exitCode` / `willRestart` |
+| `process:errored` | `event: PbossProcessEvent` | Terminal: start failed or the restart budget was exhausted |
+| `process:delete` | `event: PbossProcessEvent` | Removed from pboss's list |
+| `process:reload` | `event: PbossProcessEvent` | A graceful reload completed |
+| `metrics` | `snapshot: MetricSnapshot` | Metrics snapshot received (client-side polling) |
 | `log:data` | `logs: Array<{ name, id, out, err }>` | Log data retrieved |
+
+The synthetic `process:scale` echo is gone: scale-ups arrive as one `process:start` per new instance, scale-downs as `process:stop` + `process:delete` per removed instance.
 
 ```ts
 import PBoss from "pboss";
 
 const pboss = new PBoss();
 
-pboss.on("daemon:connected", () => console.log("Connected!"));
-pboss.on("process:start", (procs) => {
-  console.log("Started:", procs.map((p) => p.name).join(", "));
+pboss.on("process:crashed", (e) => {
+  console.log(`${e.process.name} exited (code ${e.exitCode ?? "signal " + e.exitSignal})`);
+});
+pboss.on("process:restart", (e) => {
+  console.log(`${e.process.name} is back online (${e.source} restart)`);
 });
 pboss.on("error", (err) => console.error("pboss error:", err.message));
 
-await pboss.connect();
+await pboss.connect(); // opens the event stream; events flow from here
 ```
+
+The stream opens automatically with `connect()`. Call `await pboss.subscribeEvents()` manually if you use the request-style helpers without connecting. `disconnect()` closes the stream; the daemon detaches the subscription when the socket dies, so nothing leaks on either side.
 
 ## Error handling
 

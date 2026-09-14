@@ -22,7 +22,7 @@ Installs and starts the boot startup service — as your normal user, no root:
 
 - **Linux:** writes and enables a **per-user systemd unit** (`~/.config/systemd/user/pboss.service`) and drives it with `systemctl --user` — no root, no sudo. After bring-up, pboss best-effort runs `loginctl enable-linger <user>` so the daemon starts at **boot** rather than at your first login; where linger is refused (older systemd / polkit), the install still succeeds and says so. The start is `--no-block` with a hard health deadline (unit state + socket ping), so `install` always returns — a failing daemon produces a diagnosis, never a hang.
 - **macOS:** writes and loads a `launchd` LaunchAgent (`~/Library/LaunchAgents/com.pboss.daemon.plist`). No root needed or wanted — sudo is rejected with a re-run hint.
-- **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) that starts the daemon at **this user's logon**, via PowerShell's `Register-ScheduledTask`. No elevation required; only hosts whose policy refuses it ask for an elevated re-run.
+- **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) that starts the daemon at **this user's logon**, via PowerShell's `Register-ScheduledTask`. No elevation required. Hosts whose policy denies even per-user task registration ("Access is denied") automatically fall back to the **per-user Registry Run key** (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run\PBOSS_Daemon`) — same logon trigger, zero Task Scheduler permissions, and the install says which mechanism was used. Only when both fail does the command exit nonzero with the elevated re-run hint. The daemon is also brought up immediately after installing (installers and `pboss upgrade` stop it before replacing the binary).
 
 ```bash
 pboss startup install
@@ -70,7 +70,7 @@ Remove the installed startup service — per-user on every platform, no root:
 pboss startup uninstall
 ```
 
-On Windows, `schtasks /delete` reporting "cannot find" is surfaced honestly ("No PBOSS_Daemon scheduled task found — nothing to remove") instead of a fake success line.
+On Windows, both persistence mechanisms are removed by the same command — the scheduled task AND the Registry Run key fallback — and `schtasks /delete` reporting "cannot find" is surfaced honestly ("No PBOSS_Daemon scheduled task or Run key found — nothing to remove") instead of a fake success line.
 
 ## pboss startup generate
 

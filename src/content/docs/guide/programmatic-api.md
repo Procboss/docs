@@ -79,8 +79,8 @@ Every CLI command has a method twin:
 
 | Area | Methods |
 |---|---|
-| Process control | `start(options)`, `startTarget(target)`, `startEcosystem(config)`, `stop(target?)`, `restart(target?)`, `reload(target?)`, `del(target?)` / `delete(target?)`, `scale(target, count)`, `sendSignal(target, signal)`, `reset(target?)` |
-| Introspection | `list()`, `describe(target)`, `logs(target?, lines?)`, `streamLogs(target, cb, signal?)`, `flush(target?)` |
+| Process control | `start(options)`, `startTarget(target)`, `startEcosystem(config)`, `stop(target?)`, `restart(target?)`, `reload(target?)`, `del(target?)` / `delete(target?, opts?)`, `scale(target, count)`, `sendSignal(target, signal)`, `reset(target?)` |
+| Introspection | `list()`, `describe(target)`, `deps(target)`, `logs(target?, lines?)`, `streamLogs(target, cb, signal?)`, `flush(target?)` |
 | Monitoring | `metrics()`, `metricsHistory(seconds?)`, `prometheus()`, `startPolling(intervalMs?)`, `stopPolling()` |
 | Persistence | `save()`, `resurrect()` |
 | Dashboard | `dashboard(port?, metricsPort?)`, `dashboardStop()` |
@@ -95,6 +95,29 @@ await pboss.startTarget("stellarforge"); // every stopped member comes back onli
 ```
 
 The same atomicity governs `startEcosystem` (standalone apps independent, each namespace one atomic group) and namespace-level `restart` — see [Processes — Namespaces](/cli/processes#namespaces). `start(options)` accepts `onNsMemberExit: "ignore" | "exit"`, the programmatic form of the `--on-ns-member-exit` flag.
+
+`start(options)` is **dependency-aware** ([#33](https://github.com/Procboss/pboss/issues/33)): `dependsOn: ["postgres", { name: "metrics", policy: "optional" }]` is resolved before the process spawns — pboss apps first (stopped ones are started), then systemd units (checked, never managed). A blocked start throws a `PBossError` whose `response.dependencyFailure` carries the structured facts:
+
+```ts
+try {
+  await pboss.start({ script: "./api.ts", name: "api", dependsOn: ["postgresql"] });
+} catch (err) {
+  // err.response.dependencyFailure:
+  // { process: "api", dependency: "postgresql", provider: "systemd",
+  //   service: "postgresql.service", state: "inactive",
+  //   reason: "dependency_not_running" }
+}
+```
+
+`deps(target)` inspects the graph without starting anything, and
+`delete(target, { force: true })` overrides the has-dependents refusal:
+
+```ts
+const reports = await pboss.deps("api");
+for (const dep of reports[0].dependencies) {
+  console.log(dep.name, dep.provider, dep.status, dep.satisfied);
+}
+```
 
 `streamLogs` is the programmatic tail:
 

@@ -1,6 +1,6 @@
 ---
 title: Processes
-description: pboss process management commands — start, stop, restart, reload, delete, scale, describe, list, signal, reset.
+description: pboss process management commands — start, stop, restart, reload, delete, deps, scale, describe, list, signal, reset.
 section: cli
 order: 1
 ---
@@ -66,6 +66,66 @@ module.exports = {
 
 The policy is per-app and only applies to processes **with** a namespace — standalone processes are never affected by another process's exit. pboss-initiated stops (user stop, rollback, the policy itself) never trigger the policy again, so it cannot cascade. The setting persists in the process dump and survives daemon restarts.
 
+## Dependencies ([#33](https://github.com/Procboss/pboss/issues/33))
+
+Any process can declare what it needs before it can start. pboss resolves the whole dependency graph, starts what it owns in the right order, and checks what the operating system owns:
+
+```js
+// ecosystem.config.js
+module.exports = {
+  apps: [
+    { name: "postgres", script: "./postgres-wrapper.ts" },
+    { name: "api", script: "./api.ts", dependsOn: ["postgres", "redis"] },
+    { name: "worker", script: "./worker.ts", dependsOn: ["api"] },
+  ],
+};
+```
+
+```bash
+pboss start worker     # starts postgres → api → worker, in that order
+pboss start api.ts --name api --depends-on postgres,redis   # CLI form
+```
+
+**Resolution order:** a dependency name resolves against **pboss processes first** (exact names and cluster instances). If nothing matches, pboss asks the system service manager — on Linux, systemd. `postgresql` maps to `postgresql.service`, `mongodb` to `mongod.service`, `redis` to `redis.service`, with common alias differences covered. Only an **active** unit satisfies a dependency.
+
+pboss never starts, stops, or otherwise manages a system service — the check is read-only. Services owned by systemd, another admin, or another orchestrator stay theirs.
+
+### Policies
+
+Every dependency is `"required"` *(default — the dependent cannot start until it is satisfied)* or `"optional"` *(preferred, never blocks)*:
+
+```js
+dependsOn: ["postgres", { name: "metrics", policy: "optional" }]
+```
+
+The CLI flag accepts `name` or `name:optional` entries, comma-separated: `--depends-on postgres,metrics:optional`.
+
+### Start and restart semantics
+
+- Already-running dependencies are **never restarted** — `pboss start api` (or `restart api`) leaves a running `postgres` alone.
+- Resolution is recursive: starting `worker` pulls up `api`, which pulls up `postgres`. Independent dependencies start **concurrently** — the graph is level-ordered, not a flat chain.
+- Cycles (`a → b → a`, or a self-reference) are detected **before** anything starts — a clear error, never an infinite loop.
+- Rollback is invocation-scoped, same contract as namespaces: if `api` fails, dependencies **this start brought up** are stopped again; processes already running are preserved.
+- `restart` pre-flights dependencies **before** stopping the process — a blocked restart fails while the process is still running, instead of stopping it and failing to bring it back.
+- Restarting a dependency never restarts its dependents (runtime propagation is a future policy, not a surprise).
+- Dependencies can cross namespace boundaries — `web` in namespace `frontend` may depend on `api` in namespace `backend`.
+
+`dependsOn` persists with the process configuration. Boot recovery brings the fleet up **dependencies-first** regardless of the dump's save order, and one failed graph never blocks unrelated graphs.
+
+### Blocked starts say exactly why
+
+```text
+Cannot start "api".
+
+Required dependency "postgresql" is unavailable.
+
+Provider: systemd
+Service: postgresql.service
+State: inactive
+```
+
+A name that resolves nowhere reports both misses — `Checked: ProcBoss applications: not found / System services: not found` — and API clients get the same facts as a structured `dependencyFailure` object (see the [programmatic API](/guide/programmatic-api)).
+
 ## pboss start
 
 Start a new process or processes.
@@ -127,6 +187,7 @@ Arguments after `--` are passed through to your script. The same set of options 
 | `--port <n>` | Base port (auto-incremented in cluster mode) | — |
 | `--namespace <ns>` | Process namespace for grouping | — |
 | `--on-ns-member-exit <policy>` | Reaction to a namespace sibling's terminal exit: `ignore` or `exit` (namespaced processes only) | `ignore` |
+| `--depends-on <list>` | Comma-separated dependencies (issue #33): `name` or `name:optional` each — pboss apps first, then systemd units | — |
 | `--wait-ready` | Wait for process ready signal | `false` |
 | `--listen-timeout <ms>` | Timeout waiting for ready signal | `3000` |
 | `--source-map-support` | Enable source map support | `false` |
@@ -167,6 +228,12 @@ A namespace target stops every member of the group (and only those), with a one-
 
 Stopping is graceful by default: the process receives `SIGTERM` and has the kill timeout (default 5s) to exit before `SIGKILL` is sent.
 
+Stopping a **dependency** (issue #33) prints a warning naming the processes that still require it — they keep running; only the warning tells you their dependency just went away:
+
+```text
+[pboss] warning: stopping "postgres" — still required by "api". They keep running, but their required dependency will be unavailable until it is started again.
+```
+
 ## pboss restart
 
 Stop and restart a process. The process is fully stopped and then re-spawned — there **will** be downtime. For zero-downtime reloads, use `reload`.
@@ -178,6 +245,8 @@ pboss restart all
 ```
 
 A namespace target restarts every member — including members that were stopped (restart on a stopped process starts it). The restart is **atomic**: stop-all, then an atomic start — if any member fails to come back, the members this restart brought up are rolled back, while members that never stopped (a failed stop) stay running.
+
+Restart is **dependency-aware** (issue #33): required dependencies are pre-flighted *before* the stop, already-running ones are never restarted, and restarting a dependency never restarts its dependents. `pboss restart api` restarts `api` — not the `postgres` under it.
 
 ## pboss reload
 
@@ -211,6 +280,46 @@ pboss delete all
 ```
 
 Deleting a **namespace** removes every process in the group, best-effort — every member is removed even if one refuses to stop. Because that can take several processes at once, pboss asks for confirmation first — `[y/N]` in a terminal, and a hard refusal with a `--force` hint when stdin is not a TTY (scripts, CI, pipes). Name and cluster deletes keep their old unconfirmed behavior, as does `delete all`.
+
+Deleting a **dependency** (issue #33) is refused when other processes still `dependsOn` it — pboss will not silently break their graph:
+
+```text
+Error: Cannot delete "postgres" (postgres) — "api" still depends on it.
+Those processes will fail to start until the dependency is restored or removed from their dependsOn.
+Run with --force (CLI) or pass { force: true } (API) to delete it anyway.
+```
+
+`--force` overrides (it also skips the namespace confirmation above). Members removed **together** with their dependents — a namespace or `all` delete — do not trigger the refusal; nothing is left stranded.
+
+## pboss deps
+
+Inspect the dependency graph (issue #33): direct dependencies with their provider, state, and satisfaction.
+
+```bash
+pboss deps api
+```
+
+```text
+api
+├── postgres     [running]    ProcBoss  ✓
+├── redis        [running]    ProcBoss  ✓
+├── postgresql   [active]     systemd  ✓
+└── metrics      [not-found]  systemd  ✗ ~ (optional)
+```
+
+`--reverse` answers the other direction — who depends on this process:
+
+```bash
+pboss deps postgres --reverse
+```
+
+```text
+postgres
+├── api      [online]
+└── worker   [online]
+```
+
+Both views are **direct** relationships. A namespace target reports each member; a missing target is a clear error. Resolution runs for the report, but nothing is started — `pboss deps` is pure inspection. The same data is available programmatically via `deps()`.
 
 ## pboss scale
 

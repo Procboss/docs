@@ -54,6 +54,10 @@ pboss is a daemonized process manager: a CLI in the front, one long-running daem
 
 **Namespace coordination** — namespace-scoped operations (start/resume/restart/stop/reload/delete) serialize through per-namespace promise-chain locks: two terminals cannot interleave a restart and a stop on the same group, while different namespaces stay independently operable. The `onNsMemberExit` policy (`ignore` default, or `exit`) stops a namespaced process when a sibling exits for good. Membership and the policy persist in the process dump, so both survive daemon restarts.
 
+**Dependency engine** — a dedicated subsystem (`src/dependencies.ts`, issue #33) owns everything dependency-shaped, keeping lifecycle code free of resolution logic. `dependsOn` configuration is parsed into a normalized, persisted form; an **explicit graph** (not a recursive `start()` call) provides cycle detection, topological levels, and reverse lookups; a **provider** layer resolves names — ProcBoss processes first, then systemd via `systemctl show` (checking state, never managing the service).
+
+**Dependency executor** — the engine's level-concurrent executor sits behind every lifecycle path: start, resume, restart, the ecosystem sweep, and boot recovery. It starts stopped ProcBoss dependencies (already-running ones are never restarted), checks external services, records what it started into the invocation's rollback scope, and reports failures as diagnostics that carry the provider, service and state — for humans in the message, for automation in a structured `dependencyFailure` payload.
+
 **IPC protocol** — the CLI and daemon communicate over WebSocket on a Unix socket. Messages are JSON-encoded with a `type` field for routing and an `id` field for request-response correlation. This is the same protocol the [programmatic API](/guide/programmatic-api) rides on — `pboss.send()` gives you direct access to it.
 
 **Event system** — the ProcessManager is the canonical event source ([#32](https://github.com/Procboss/pboss/issues/32)): every ProcessContainer state transition, operator-initiated or autonomous (crash autorestart, `maxMemoryRestart`, watch, cron, health-check), is funneled through it as a typed `process:*` event with its cause and a fresh state snapshot. Modules subscribe directly via `pm.on(...)`.
@@ -73,6 +77,7 @@ pboss is a daemonized process manager: a CLI in the front, one long-running daem
 - **Fast by construction** — `Bun.spawn` for orchestration, `Bun.serve` for HTTP/WebSocket, `Bun.file` for I/O, `Bun.gzipSync` for log compression. The whole daemon starts in under 50ms and idles around ~12MB of RAM.
 - **Supervision that outlives your shell** — because the daemon is detached, processes keep running (and keep being restarted) after your SSH session ends.
 - **Explicit group semantics** — a namespace is an opt-in lifecycle boundary, not ambient coupling: standalone processes stay independent, and grouped processes get atomic startup, invocation-scoped rollback, serialized operations, and an explicit member-exit policy. Nothing cascades unless you ask for it.
+- **Check, never own** — dependency resolution treats services pboss does not manage as read-only facts: an active systemd unit satisfies a dependency, an inactive one blocks it, and pboss never reaches for `systemctl start`. Infrastructure owned by systemd, another admin, or another orchestrator stays theirs; lifecycle ownership of external services is an explicit opt-in for a future policy, never a side effect.
 
 ## Development setup
 

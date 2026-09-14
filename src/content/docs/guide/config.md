@@ -51,6 +51,7 @@ The complete set of options available for each entry in the `apps` array:
 | `nodeArgs` | `string[]` | — | Additional runtime arguments |
 | `namespace` | `string` | — | Namespace for grouping processes |
 | `onNsMemberExit` | `"ignore"` or `"exit"` | `ignore` | Reaction to a namespace sibling's terminal exit (namespaced processes only; see [Processes — Namespaces](/cli/processes)) |
+| `dependsOn` | `string` or `{ name, policy }` array | — | Dependencies resolved before start ([#33](https://github.com/Procboss/pboss/issues/33)): pboss processes first, then systemd units; `policy` is `"required"` (default) or `"optional"` — see [Processes — Dependencies](/cli/processes#dependencies-33) |
 | `sourceMapSupport` | `boolean` | `false` | Enable source map support |
 | `waitReady` | `boolean` | `false` | Wait for process to emit ready signal |
 | `listenTimeout` | `number` | `3000` | Timeout when waiting for ready signal |

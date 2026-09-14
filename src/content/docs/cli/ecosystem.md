@@ -168,6 +168,26 @@ admin
 
 Members can also react to a sibling's terminal exit with the [`onNsMemberExit`](/cli/processes#member-exit-policy-onnsmemberexit) policy — `"ignore"` (default) or `"exit"`, which stops the other running members so the namespace runs complete or not at all.
 
+## Dependency ordering ([#33](https://github.com/Procboss/pboss/issues/33))
+
+The `dependsOn` field makes the sweep **graph-ordered**: dependencies start before their dependents regardless of declaration order, with independent branches starting concurrently:
+
+```js
+module.exports = {
+  apps: [
+    { name: "worker", script: "./worker.ts", dependsOn: ["api"] },   // declared first…
+    { name: "api", script: "./api.ts", dependsOn: ["postgres"] },    // …starts second…
+    { name: "postgres", script: "./postgres-wrapper.ts" },           // …starts first
+  ],
+};
+```
+
+`pboss start ecosystem.config.json` brings the chain up `postgres → api → worker`. Dependencies that are not ecosystem apps resolve against **live pboss processes first, then systemd units** — an app may depend on a database the machine already runs without pboss owning it (see [Dependencies](/cli/processes#dependencies-33) for the full rules).
+
+Cross-namespace dependencies order the **groups**: when `web` in namespace `frontend` depends on `api` in namespace `backend`, the backend group starts first. Cycles — inside a namespace or across them — are refused **upfront**, before a single process starts.
+
+Dependency failures keep the same boundaries as everything else: a standalone app whose required dependency is unavailable fails (reported, sweep continues), and a blocked namespace member never starts — nothing of its group is left half-up. Dependencies started for a group join that group's rollback scope; other namespaces are untouched.
+
 ## What's available per app
 
 Every field in the `apps` array mirrors a `pboss start` flag — the full mapping lives in the [configuration reference](/guide/config). The `deploy` block is consumed by [`pboss deploy`](/cli/deploy).

@@ -64,6 +64,10 @@ module.exports = {
 
 `pboss alerts test <process> <kind>` fires ONE synthetic alert through the real delivery chain — outbox, cloud ack, your connected channels — without waiting for a real spike. Kinds: `cpu`, `mem`, `restart`, `eventloop`, `handles`, `system-cpu`, `system-mem`. With the cloud link down it queues honestly ("Test alert queued") and delivers on the next reconnect, which is itself a useful check of the outage path.
 
+## When the same alert keeps coming back
+
+The cloud's alerts inbox counts recurrences instead of stacking rows. The same condition — same server, process, kind and normalized title, volatile numbers ignored ("CPU at 91%" is "CPU at 93%") — increments a **×N** counter on one open incident and floats it back to the top. Channels hear the **first** occurrence and any severity escalation, not every repeat. Resolving it closes the cycle; the next occurrence opens a fresh one, and a recovered monitor resolves its own "is down" alert. Deploys notify every run (chat screens track them); failures still count up per repo.
+
 ## Related
 
 - [Agent API](/cloud/agent-api) — the wire kinds (`cpu.spike`, `mem.high`, …) and their fields.

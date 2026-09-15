@@ -126,7 +126,7 @@ The state report frame:
   "os": "linux",
   "arch": "x64",
   "bunVersion": "1.2.20",
-  "agentVersion": "pboss/1.4.5",
+  "agentVersion": "pboss/1.4.6",
   "cpu": 12,
   "memUsed": 800,
   "memTotal": 4000,

@@ -16,6 +16,10 @@ rm -f ~/.pboss/daemon.sock ~/.pboss/daemon.pid
 pboss list
 ```
 
+## "EBUSY: resource busy or locked, open" right after boot (Windows)
+
+The daemon is almost certainly already running — started at logon by the boot task — and an old pboss could not see it: the CLI's liveness check asked the socket *file* in a way that cannot see a live socket, concluded the daemon was dead, and tried to start a second one whose log files collided with the running daemon's launcher. Fixed in v1.4.6 (`pboss --version`). After upgrading, `pboss ping` answers from the running daemon and `~/.pboss/daemon.err.log` stays clean.
+
 ## "the Bun runtime was not found" — but bun IS installed
 
 The error appears when Bun lives where the daemon cannot see it — typically `~/.bun/bin` (the default `curl bun.sh/install` location) while the daemon was started by systemd/launchd with a minimal service PATH. `which bun` works in your shell because YOUR shell has that directory on PATH; the daemon does not.

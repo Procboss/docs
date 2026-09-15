@@ -24,7 +24,7 @@ Installs and starts the boot startup service — as your normal user, no root:
 - **macOS:** writes and loads a `launchd` LaunchAgent (`~/Library/LaunchAgents/com.pboss.daemon.plist`). No root needed or wanted — sudo is rejected with a re-run hint.
 - **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) starting the daemon at **this user's logon** via `Register-ScheduledTask`, at RunLevel **Limited** (a Highest task needs an elevated shell to register; the daemon needs only the user's token). Hosts that deny even per-user registration ("Access is denied") fall back to the **per-user Registry Run key** (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run\PBOSS_Daemon`) — same logon trigger, zero Task Scheduler permissions; the install says which mechanism was used. Only when both fail does it exit nonzero with the elevated re-run hint. The daemon is also brought up immediately (installers and `pboss upgrade` stop it before replacing the binary).
 
-On Windows, both mechanisms start the daemon through a generated hidden launcher (`~\.pboss\daemon-launch.vbs` run by `wscript.exe`), so it comes up with **no console window** — right after install and at every logon — and its output is appended to `~\.pboss\daemon.out.log` / `daemon.err.log`.
+On Windows, both mechanisms start the daemon through a generated hidden launcher (`~\.pboss\daemon-launch.vbs` run by `wscript.exe`), so it comes up with **no console window** — right after install and at every logon — and its output is appended to `~\.pboss\daemon.out.log` / `daemon.err.log`. The launcher then runs the boot resurrect (`pboss resurrect --wait 15`, the Windows twin of the unit's `ExecStartPost`), so saved processes come back at logon; its log — `~\.pboss\resurrect.out.log` / `resurrect.err.log` — is where to look when something did not.
 
 ```bash
 pboss startup install
@@ -104,7 +104,7 @@ The dump records one extra bit per process — whether it was stopped. That is w
 
 ## pboss resurrect
 
-Restore previously saved processes (this is what the boot service runs automatically via the unit's `ExecStartPost`):
+Restore previously saved processes (this is what the boot service runs automatically — the unit's `ExecStartPost` on Linux, the hidden launcher on Windows):
 
 ```bash
 pboss resurrect
@@ -115,8 +115,8 @@ If a saved process is already running (the daemon restarted while its children s
 ## What a reboot looks like
 
 1. systemd / launchd / Task Scheduler starts the pboss daemon (`pboss __daemon`).
-2. The service definition immediately runs `pboss resurrect` and restores the saved list — running processes running, stopped ones stopped.
-3. If the daemon later crashes, systemd's `Restart=on-failure` restarts it and resurrect runs again.
+2. On Linux (`ExecStartPost`) and Windows (hidden launcher), the service immediately runs `pboss resurrect` and restores the saved list — running processes running, stopped ones stopped. On macOS, run `pboss resurrect` once after logon.
+3. If the daemon later crashes, systemd's `Restart=always` restarts it and the unit's post step resurrect runs again.
 
 ```bash
 # the whole setup, once, at install time:

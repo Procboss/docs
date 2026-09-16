@@ -66,7 +66,7 @@ module.exports = {
 
 ## When the same alert keeps coming back
 
-The cloud's alerts inbox counts recurrences instead of stacking rows. The same condition — same server, process, kind and normalized title, volatile numbers ignored ("CPU at 91%" is "CPU at 93%") — increments a **×N** counter on one open incident and floats it back to the top. Channels hear the **first** occurrence and any severity escalation, not every repeat. Resolving it closes the cycle; the next occurrence opens a fresh one, and a recovered monitor resolves its own "is down" alert. Deploys notify every run (chat screens track them); failures still count up per repo.
+The cloud's alerts inbox counts recurrences instead of stacking rows. The same condition — same server, process, kind and normalized title, volatile numbers ignored ("CPU at 91%" is "CPU at 93%") — increments a **×N** counter on one open incident and floats it back to the top. Channels hear the **first** occurrence and any severity escalation, not every repeat. The inbox is an announcement stream, not a ticket queue — a CPU spike doesn't need resolving by hand: the bell counts **unseen** rows, "Mark all seen" clears them, and a recurrence re-arms its row as unseen (new activity is new news). Dismissing from Telegram closes the cycle; the next occurrence opens a fresh counted row. Deploys notify every run (chat screens track them); failures still count up per repo.
 
 ## Related
 

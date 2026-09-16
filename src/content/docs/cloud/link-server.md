@@ -48,7 +48,7 @@ The split is deliberate: revoking a server in the dashboard never logs you out o
 ## What the linked daemon does
 
 - Opens the outbound **WebSocket** (`/ws/agent`) — commands, state, results, and live log frames all flow over it; automatic reconnect with exponential backoff (1s → 30s, jittered, reset on success).
-- Sends a **full state report every 10 seconds** (and after every command): server CPU/memory, and the process list with per-process CPU, memory, restarts, crashes, and uptime.
+- Sends a **full state report on the tier heartbeat** (and after every command): 60 seconds by default — the cloud retunes it to your ProcBoss plan's cadence (Free 5 min, Basic/Growth 60s, Pro 30s, Business 15s) via the `report-interval` frame, no relink needed. Each report carries server CPU/memory and the process list with per-process CPU, memory, restarts, crashes, and uptime.
 - Derives **events** from consecutive snapshots — crashes, restarts, online/stopped transitions — which the cloud turns into alert rows.
 - **Executes remote commands**: `process.list/start/stop/restart/delete/logs/deploy`, `server.info`, `server.deploy`. Each gets a result frame and triggers a fresh state report, so the dashboard reflects reality immediately.
 - **Tails logs live** when a dashboard opens them (`log.watch` / `log.unwatch`); new lines are pushed as they land on disk.

@@ -40,7 +40,7 @@ pboss is a production-grade, runtime-agnostic process manager built on native Bu
 | Runs where | Your machines, containers | Your machines — linked to procboss.com |
 | Process control | ✅ full CLI + dashboard | ✅ same CLI, same commands |
 | Fleet overview across servers | per-machine | one dashboard for every linked server |
-| Alerts & uptime history | — | ✅ |
+| Alerts + cron job visibility | — | ✅ |
 | Linking a machine | — | `pboss cloud connect` (see [ProcBoss Cloud](/cloud)) |
 | Your user login on any CLI | — | `pboss login` / `pboss whoami` |
 

@@ -66,9 +66,9 @@ module.exports = {
 
 ## When the same alert keeps coming back
 
-The cloud's alerts inbox counts recurrences instead of stacking rows. The same condition — same server, process, kind and normalized title; volatile numbers ignored ("CPU at 91%" is "CPU at 93%") — folds into one open incident while repeats land **within the same hour** of its first sighting: the parent gains a **×N** counter and floats back to the top. Each fold records its own line — time plus reading ("86%", "exit 1") — so the expander unfolds real history, not just a count. A repeat after the hour opens a fresh parent row — a new episode, announced again.
+The cloud's alerts inbox counts recurrences instead of stacking rows. The same condition — same server, process, kind and normalized title; volatile numbers ignored ("CPU at 91%" is "CPU at 93%") — folds into one open incident while repeats land **within 12 hours** of its first sighting: the parent gains a **×N** counter and floats to the top. The window is configurable — `alertOccurrenceWindowMs` in `src/configs/cloud.ts`. Each fold records its own line — time plus reading ("86%", "exit 1") — so the expander unfolds real history; a repeat after the window opens a fresh episode, announced again.
 
-Channels hear the **first** occurrence of an episode and any severity escalation, not every repeat; a new episode (the post-hour repeat) announces again. Deploys notify every run (chat screens track them); failures still count up per repo.
+Channels hear the **first** occurrence of an episode and any severity escalation, not every repeat; a new episode (the post-window repeat) announces again. Deploys notify every run (chat screens track them); failures still count up per repo.
 
 Reading IS the gesture. The bell counts **unseen** announcements; opening the inbox page marks them all seen (the dots stay for the visit, so what rung is still visible), the dashboard's alerts feed marks each row as you scroll past it, and Telegram reads count too — any message or reaction marks everything seen, and a periodic read-receipt sweep catches silent reads. A recurrence re-arms its row as unseen: new activity is new news. Dismissing from Telegram closes the cycle; the next occurrence opens a fresh counted row.
 

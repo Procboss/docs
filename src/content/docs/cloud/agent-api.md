@@ -114,6 +114,8 @@ Close code `4001` means revoked — the agent wipes its credential and stops; cl
 
 Events in state reports carry a delivery `id`. The agent queues them in an outbox until the cloud acks ingestion (`event-ack`); the cloud dedups by id, so a crash that happens during a network outage is delivered after the reconnect without double-alerting.
 
+**Crash events are pushed the moment a process dies** — the agent listens to its supervisor's own `process:crashed` signal (exit code, signal, best-effort reason, and a log tail read once the last stderr has flushed) instead of waiting for the next snapshot; restart, online/stopped, and threshold events are derived at report time. Clean self-exits (exit 0, no signal) are lifecycle facts, not crashes — they never alert.
+
 **Event kinds.** Lifecycle: `crash`, `restart`, `online`, `stopped`. Resource thresholds (the agent-side detector — see [threshold alerts](/cloud/alerts)): `cpu.spike`, `cpu.sustained`, `mem.spike`, `mem.high`, `restart.loop`, `eventloop.latency`, `handles.leak`, `system.cpu.high`, `system.mem.high`, and the matching `*.recovered` kinds (server-wide events use the `__system__` process name). Health checks: `health.failing`, `health.recovered`. Cron jobs: `cron.failed`, `cron.completed`. Threshold events carry `metricValue`, `thresholdValue`, and (on recovery) `durationSec`; crash events carry a best-effort `reason` ("likely OOM", "uncaught exception") derived from the exit facts.
 
 The state report frame:
@@ -136,7 +138,7 @@ The state report frame:
       "healthStatus": "healthy", "healthFails": 0 }
   ],
   "events": [
-    { "kind": "crash", "process": "web", "at": 1690000000000, "detail": "process errored",
+    { "kind": "crash", "process": "web", "at": 1690000000000, "detail": "process crashed (exit 137)",
       "exitCode": 137, "reason": "likely OOM" }
   ]
 }

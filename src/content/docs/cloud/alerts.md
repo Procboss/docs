@@ -68,7 +68,9 @@ module.exports = {
 
 The cloud's alerts inbox counts recurrences instead of stacking rows. The same condition — same server, process, kind and normalized title, volatile numbers ignored ("CPU at 91%" is "CPU at 93%") — increments a **×N** counter on one open incident and floats it back to the top. Channels hear the **first** occurrence and any severity escalation, not every repeat. Deploys notify every run (chat screens track them); failures still count up per repo.
 
-Reading IS the gesture. The bell counts **unseen** announcements; opening the inbox page marks them all seen (the dots stay for the visit, so what rung is still visible), the dashboard's alerts feed marks each row as you scroll past it, and Telegram reads count too — any message or reaction marks everything seen, and a periodic read-receipt sweep catches silent reads. A recurrence re-arms its row as unseen: new activity is new news. Dismissing from Telegram closes the cycle; the next occurrence opens a fresh counted row. A left rail narrows the inbox by server or process.
+Reading IS the gesture. The bell counts **unseen** announcements; opening the inbox page marks them all seen (the dots stay for the visit, so what rung is still visible), the dashboard's alerts feed marks each row as you scroll past it, and Telegram reads count too — any message or reaction marks everything seen, and a periodic read-receipt sweep catches silent reads. A recurrence re-arms its row as unseen: new activity is new news. Dismissing from Telegram closes the cycle; the next occurrence opens a fresh counted row.
+
+The inbox page reads like an email client: a sidebar with the fleet's headline numbers (critical, warnings, resolved today) and filter-by-server/process lists that re-scope both the feed and the stats, and a card feed grouped by day — Today, Yesterday, the weekday-dated tail. Each card carries its severity stripe, occurrence count, and routing; a "show occurrences" expander unfolds a recurred card's first-seen history, and "load older alerts" pages further back in time without losing your place.
 
 ## Related
 

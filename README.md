@@ -49,7 +49,23 @@ Site search is [Pagefind](https://pagefind.app/) with a custom modal UI (`src/co
 - **Cost**: the search core is imported on the first open of the modal — visitors who never search never download it. Without JavaScript the site is fully readable; the trigger is inert.
 - **Dev server caveat**: `bun run dev` serves no index — the modal explains this honestly. Use `bun run build && bun run preview` to try search locally.
 
-To add a page: drop a Markdown file into `src/content/docs/` with frontmatter `title`, `section` (one of the keys in `src/config.ts`), and `order`. It appears in the sidebar, prev/next, and gets `/slug` routing automatically.
+To add a page: drop a Markdown file into `src/content/docs/` with frontmatter `title`, `section` (one of the keys in `src/config.ts`), and `order`. It appears in the sidebar, prev/next, and gets `/slug` routing automatically — **and in the sitemap, `llms.txt`, `llms-full.txt`, `rss.xml`, and its `.md` mirror with zero extra work** (all generated from the collection at build time).
+
+## SEO + LLM/AI surfaces
+
+Every surface below is **generated at build time from the content collection** — a new page appears everywhere the moment it is written. All pinned by `scripts/test-seo.ts` (878 checks, runs after `bun run build`).
+
+| Surface | What it is |
+|---|---|
+| `/sitemap-index.xml` → `/sitemap-0.xml` | Automatic sitemap (`@astrojs/sitemap`) — every static route, absolute URLs, git-derived `<lastmod>` per page |
+| `/robots.txt` | Open to all crawlers — AI/LLM bots (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, CCBot, …) explicitly welcomed, sitemap + `llms.txt` declared |
+| `/llms.txt` | The [llmstxt.org](https://llmstxt.org) map for LLMs: H1 + summary, every page linked with its description, plus the Optional block (full dump, RSS, GitHub) |
+| `/llms-full.txt` | The whole site as ONE markdown document — every page's H1 + `> Source: <url>` + body |
+| `/<slug>.md` | Every page as raw markdown at its URL + `.md` (Anthropic-docs-style). `noindex` via `_headers` — HTML stays canonical for search engines |
+| `/rss.xml` | Dependency-free RSS 2.0, one item per page, `pubDate` = git lastmod |
+| `/og.png` | 1200×630 branded Open Graph card (regenerate: `agent-browser set viewport 1200 630` → open `scripts/og-image.html` → screenshot `public/og.png`) |
+
+Per-page head: canonical + `og:url` (trailing-slash, directory build), `og:site_name` / `og:image` (+width/height/alt) / `og:locale`, the `twitter:card` suite (`summary_large_image`), `article:section` + `article:modified_time` (git lastmod), `theme-color`, RSS + markdown `<link rel="alternate">`s, and one JSON-LD `@graph`: **WebSite + Organization + TechArticle + BreadcrumbList** (the index adds **SoftwareApplication** for pboss). Builders live in `src/lib/seo.ts`; the shared lastmod lives in `src/lib/lastmod.mjs` (git → mtime → now, fail-soft).
 
 ## Development
 

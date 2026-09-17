@@ -1,0 +1,62 @@
+# docs.procboss.com — crawler policy
+#
+# Everything is crawlable, including AI/LLM crawlers and training bots.
+# The docs are the product: the more machines can read them, the better.
+#
+# Machine maps:
+#   sitemap-index.xml — the full page graph: https://docs.procboss.com/sitemap-index.xml
+#   llms.txt         — the LLM-facing site map: https://docs.procboss.com/llms.txt
+#   llms-full.txt    — every page as one markdown file: https://docs.procboss.com/llms-full.txt
+#   any page + ".md" — that page's raw markdown, e.g. https://docs.procboss.com/quickstart.md
+
+User-agent: *
+Allow: /
+
+# AI / LLM crawlers — explicitly welcome (the default already allows them;
+# these sections make the intent undeniable and future-proof it).
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+Sitemap: https://docs.procboss.com/sitemap-index.xml

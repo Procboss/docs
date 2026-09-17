@@ -8,10 +8,11 @@
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist --exclude-selectors .anchor",
     "preview": "astro preview",
-    "test": "bun scripts/test-docs-consistency.ts",
+    "test": "bun scripts/test-docs-consistency.ts && bun scripts/test-seo.ts",
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.0",
     "astro": "^5.7.0",

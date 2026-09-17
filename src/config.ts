@@ -3,6 +3,8 @@
  * rebranding or moving hosts is a one-file change.
  */
 export const siteConfig = {
+  /** Canonical docs origin — MUST match astro.config.mjs `site`. */
+  url: "https://docs.procboss.com",
   /** Docs site title used in <title> and the header. */
   name: "ProcBoss Docs",
   /** The product: open-source Bun-native process manager. */

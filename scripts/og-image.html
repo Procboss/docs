@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ProcBoss Docs — OG image</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background: #f4f1ea;
+    font-family: "Geist", system-ui, sans-serif;
+    color: #13111c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* subtle paper grain via layered radial dots */
+    background-image: radial-gradient(#13111c 0.6px, transparent 0.6px);
+    background-size: 22px 22px;
+  }
+  .card {
+    width: 1088px; height: 502px;
+    background: #ffffff;
+    border: 3px solid #13111c;
+    border-radius: 28px;
+    box-shadow: 12px 12px 0 #13111c;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 68px 30px;
+    position: relative;
+  }
+  .main { flex: 1; display: flex; align-items: center; gap: 64px; min-height: 0; }
+  .badge { flex-shrink: 0; width: 280px; height: 280px; position: relative; }
+  .badge svg { width: 100%; height: 100%; }
+  .right { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .eyebrow {
+    font-family: "Geist Mono", monospace;
+    font-size: 21px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: #78716c;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", "Geist", sans-serif;
+    font-weight: 800;
+    font-size: 108px;
+    line-height: 0.94;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+  }
+  h1 .docs { color: #16a34a; }
+  .tagline {
+    font-size: 30px; line-height: 1.35; color: #44403c; font-weight: 500;
+    max-width: 620px;
+  }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip {
+    font-family: "Geist Mono", monospace;
+    font-size: 19px; font-weight: 600;
+    border: 2.5px solid #13111c; border-radius: 999px;
+    padding: 7px 20px;
+    background: #ffffff; color: #13111c;
+  }
+  .chip.mint { background: #c4edd6; }
+  .chip.peach { background: #ffd9a5; }
+  .chip.green { background: #4ade80; }
+  .sticker {
+    position: absolute; top: -21px; right: 56px;
+    font-family: "Geist Mono", monospace;
+    font-size: 20px; font-weight: 700; text-transform: uppercase;
+    background: #c4edd6; color: #13111c;
+    border: 3px solid #13111c; border-radius: 12px;
+    padding: 6px 16px;
+    box-shadow: 5px 5px 0 #13111c;
+  }
+  .urlbar {
+    align-self: center;
+    font-family: "Geist Mono", monospace;
+    font-size: 17px; font-weight: 500; letter-spacing: 0.06em;
+    color: #13111c; background: #ffd9a5;
+    border: 2.5px solid #13111c; border-radius: 10px;
+    padding: 8px 22px;
+    box-shadow: 4px 4px 0 #13111c;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="sticker">open source · GPLv3</span>
+    <div class="main">
+      <div class="badge">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="16" y="16" width="80" height="80" rx="22" fill="#13111c"/>
+          <rect x="9" y="9" width="80" height="80" rx="22" fill="#ace6c4" stroke="#13111c" stroke-width="6"/>
+          <line x1="9" y1="30" x2="89" y2="30" stroke="#13111c" stroke-width="5"/>
+          <circle cx="25" cy="19.5" r="4.2" fill="#13111c"/>
+          <circle cx="37" cy="19.5" r="4.2" fill="#13111c"/>
+          <circle cx="49" cy="19.5" r="4.2" fill="#13111c"/>
+          <circle cx="37" cy="58" r="15.5" fill="#ffffff" stroke="#13111c" stroke-width="6"/>
+          <circle cx="63" cy="58" r="15.5" fill="#ffffff" stroke="#13111c" stroke-width="6"/>
+          <circle cx="33.5" cy="60" r="5.5" fill="#13111c"/>
+          <circle cx="66.5" cy="60" r="5.5" fill="#13111c"/>
+        </svg>
+      </div>
+      <div class="right">
+        <div class="eyebrow">docs.procboss.com</div>
+        <h1>pboss<span class="docs">.docs</span></h1>
+        <p class="tagline">The open-source, Bun-native process manager — run, cluster, and monitor anything. CLI, guides, and ProcBoss Cloud.</p>
+        <div class="chips">
+          <span class="chip mint">cli reference</span>
+          <span class="chip">guides</span>
+          <span class="chip peach">recipes</span>
+          <span class="chip green">cloud</span>
+        </div>
+      </div>
+    </div>
+    <div class="urlbar">llms.txt · sitemap · rss — friendly to humans, bots, and LLMs</div>
+  </div>
+</body>
+</html>

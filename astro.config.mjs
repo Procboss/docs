@@ -1,6 +1,8 @@
 import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
+import sitemap from "@astrojs/sitemap";
 import GithubSlugger from "github-slugger";
+import { getLastmodMap } from "./src/lib/lastmod.mjs";
 
 /**
  * Tiny rehype plugin: append a "#" anchor to every h2/h3 so deep links are
@@ -57,6 +59,21 @@ export default defineConfig({
   // Static output (default): every page is prerendered HTML, zero runtime —
   // exactly what Cloudflare Pages wants from us.
   output: "static",
+
+  integrations: [
+    // AUTOMATIC SITEMAP — every static route this build produces (i.e. every
+    // docs page, derived from the content collection + the link graph) lands
+    // in dist/sitemap-index.xml → sitemap-0.xml with a git-derived <lastmod>
+    // (the date the source .md was last touched — src/lib/lastmod.mjs, the
+    // same module DocLayout uses, so the two can never drift).
+    sitemap({
+      serialize(item) {
+        const slug = new URL(item.url).pathname.replace(/^\/|\/$/g, "");
+        const lastmod = getLastmodMap().get(slug);
+        return lastmod ? { ...item, lastmod } : item;
+      },
+    }),
+  ],
 
   vite: {
     plugins: [tailwindcss()],

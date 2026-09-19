@@ -135,7 +135,8 @@ The state report frame:
   "processes": [
     { "name": "web", "script": "server.ts", "pmId": 0, "status": "online",
       "cpu": 5, "mem": 120, "restarts": 0, "crashes": 0, "uptimeSec": 3600,
-      "healthStatus": "healthy", "healthFails": 0 }
+      "healthStatus": "healthy", "healthFails": 0,
+      "eventLoopMs": 12, "handles": 180, "memLimitMB": 512 }
   ],
   "events": [
     { "kind": "crash", "process": "web", "at": 1690000000000, "detail": "process crashed (exit 137)",
@@ -144,7 +145,7 @@ The state report frame:
 }
 ```
 
-`healthStatus` / `healthFails` appear only for processes with a `healthCheckUrl` configured (`"healthy"` | `"unhealthy"` | `"unknown"` — unknown until the first probe completes). Crash events become alert rows (with exit code, signal, reason, and a log tail for crash reports); threshold, health, and cron events become alert rows or notifications per their severity.
+`healthStatus` / `healthFails` appear only for processes with a `healthCheckUrl` configured (`"healthy"` | `"unhealthy"` | `"unknown"` — unknown until the first probe completes). `eventLoopMs` (event-loop lag), `handles` (open FDs), `memLimitMB` (the `maxMemoryRestart` ceiling) and `alertsDisabled` (the ecosystem switch) ride every report since agent 1.4.7 — the cloud stores them as per-process resource history and its own detectors + AI optimization advice read them; older agents simply never set them. Crash events become alert rows (with exit code, signal, reason, and a log tail for crash reports); threshold, health, and cron events become alert rows or notifications per their severity.
 
 ### POST /api/agent/servers
 

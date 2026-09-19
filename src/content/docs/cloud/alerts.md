@@ -76,6 +76,20 @@ The inbox page reads like an email client: a sidebar with the fleet's headline n
 
 What the alert **asks of you** decides what its card offers. Kinds that need someone to fix the thing — a crashed process, a failed deploy, a failed cron — carry a **Resolve** button: your "I handled it" stamp that dims the card and closes the incident (an in-window recurrence re-opens the same incident and rings again). Informational conditions (CPU spikes, memory climbs, low disk, health flaps) never offer the gesture — they self-heal, and reading them is the point. The split is kind-based, not severity-based: a warning-severity cron failure still needs resolving, a critical-severity memory spike doesn't.
 
+## The cloud's own per-process detectors
+
+The agent's thresholds are absolute — a level is a level. The cloud adds two per-process detectors on top, fed by the **resource history it now collects**: every state report writes one `ResourceSample` row per online process (CPU, RSS, event-loop lag, open handles, the `maxMemoryRestart` ceiling) plus one system row, kept for 7 days. That history is also what the AI optimization advice reads.
+
+**Absolute high usage** (agents older than 1.4.0 only — newer agents push their own `cpu.*` / `mem.*` events and would double-alert): the average of the last 3 reports past 85% CPU, or past 85% of the process's memory limit, fires one warning per episode with hysteresis (clears 15 points below). `alertDisabled` in the ecosystem silences a process here too.
+
+**Baseline anomaly** — "using far more than it usually does" — runs for every agent, because "usual" is the one thing a single box can't learn about itself. Each process's median CPU and RSS over the trailing 6 hours is what it's *meant* to use; when the recent average passes a multiple of that AND an absolute step (CPU: 3× and +20 points, floored at 30%; memory: 2.5× and +150 MB) with at least 20 samples over 30 minutes of history, one warning fires — *"api-worker CPU at 62% — 4.1× its usual 15%"*. A process that quietly doubles its footprint after a deploy no longer needs to hit any absolute level to get noticed; a genuinely busy one whose typical is already high doesn't nag.
+
+Both detectors ride the same inbox as everything else: kind `resource` (informational — self-healing, no Resolve button), occurrence-folded, channel policy intact. The knobs live in `processThresholdAlerts` in `src/configs/cloud.ts`.
+
+## AI optimization advice
+
+The dashboard's Insights view reads that collected history back: pick a process, run the analysis, and the model answers with a verdict, findings grounded in the reported numbers (CPU p95, RSS trend, event-loop lag, handle growth) and concrete tuning steps with effort estimates — or the honest "resource-healthy, nothing to tune". The prompt sees only the collected facts (no invented numbers), refuses to run on less than 2 hours of history, and the result carries its grounding ("based on 181 reports over 3 h"). It's the Pro-tier feature the `aiAnalysisDays` plan lever has gated all along.
+
 ## Related
 
 - [Agent API](/cloud/agent-api) — the wire kinds (`cpu.spike`, `mem.high`, …) and their fields.

@@ -106,7 +106,7 @@ The **transport** — ONE full-duplex WebSocket, opened by the daemon, authentic
 - Scheduled jobs — `cron.list`, `cron.run` (fire now), `cron.enable`, `cron.disable`
 - Env — `env.get` (keys only by default; values redacted unless `values: true`), `env.set` (write vars, optionally restart)
 - Alerting — `config.alerts.get` / `config.alerts.set` (read/write the threshold document live)
-- Auto-deploy — `process.gitinfo`, `deploy.run`, `deploy.cancel`
+- Deployments — `process.gitinfo`, `deploy.run` (one batch×target job: strategy `release` for created processes, `inplace` for adopted ones; backups under `~/.pboss/backups/{targetId}/v{n}_{commit}/`), `deploy.restore` (revert to a recorded backup — the same path the failed-health auto-rollback rides), `deploy.cancel`, `deploy.purge` (Remove with "also delete stored backups and files")
 
 Close code `4001` means revoked — the agent wipes its credential and stops; close code `1000` with reason `replaced` means another connection claimed the slot (two daemons sharing one credential — `pboss cloud status` says exactly that); otherwise the agent reconnects with jittered exponential backoff, and a socket that goes silent (no frames, no close — NAT timeout, network switch) is closed by the agent's watchdog and re-dialed.
 

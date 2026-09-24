@@ -7,6 +7,8 @@ order: 4
 
 Once a server is linked, ProcBoss Cloud can page you when things go wrong: a process crashes, a deploy fails, a server drops offline or comes back. Alerts go to the channels you connect — Telegram and Discord — plus the dashboard's Alerts view. Nothing is enabled by accident: a channel only receives alerts after you connect it, and each event class has its own on/off switch.
 
+Alerts fan out to every connected channel. **Ticket and support notifications are different: they go to exactly ONE channel — the preferred one you pick in Settings → Integrations → Notification channel** (email, Telegram or Discord). See [Support & the staff console](/cloud/support) for that side of the house.
+
 ## Telegram
 
 Telegram pairing follows the same philosophy as `pboss cloud connect`: no tokens pasted through terminals, and the proof of intent is a short-lived code.

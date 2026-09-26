@@ -5,9 +5,9 @@ section: cloud
 order: 4
 ---
 
-Once a server is linked, ProcBoss Cloud can page you when things go wrong: a process crashes, a deploy fails, a server drops offline or comes back. Alerts go to the channels you connect — Telegram and Discord — plus the dashboard's Alerts view. Nothing is enabled by accident: a channel only receives alerts after you connect it, and each event class has its own on/off switch.
+Once a server is linked, ProcBoss Cloud can page you when things go wrong: a process crashes, a deploy fails, a server drops offline or comes back. Alerts go where you ask them to — the ONE channel you pick — plus the dashboard's Alerts view. Nothing is enabled by accident: a channel only receives alerts after you connect it, and each event class has its own on/off switch.
 
-Alerts fan out to every connected channel. **Ticket and support notifications are different: they go to exactly ONE channel — the preferred one you pick in Settings → Integrations → Notification channel** (email, Telegram or Discord). See [Support & the staff console](/cloud/support) for that side of the house.
+**Alerts and ticket notifications go to the same place: exactly ONE channel — the one you pick in Settings → Integrations → Notification channel** (email, Telegram or Discord). Pick Telegram and crash, deploy and server events arrive in your chat, not your inbox. A channel that can't deliver (chat unlinked, SMTP not armed) falls forward to the first one that can — never silence, never everywhere. One exception: a deploy started from a chat finishes on its progress screen there. See [Support & the staff console](/cloud/support) for the ticket side of the same pick.
 
 ## Telegram
 
@@ -71,7 +71,7 @@ Discord is a **DM-only bot** — it never joins a server and never posts to a ch
 2. Open a Direct Message with ProcBoss in your Discord client.
 3. Run `/link CODE` in that DM — the code is the one the dashboard shows you.
 
-That's the whole flow. Crash, deploy and server alerts then land in your DMs as embeds color-coded by severity (red critical / yellow warning / green info), and every alert carries its own recovery actions — **Restart**, **View Logs**, **Dismiss** on a crash; **Restart all** on a grouped incident (three or more crashes inside 90 seconds collapse into one message).
+That's the whole flow. Crash, deploy and server alerts then land in your DMs as embeds color-coded by severity (red critical / yellow warning / green info and success — a finished-live deploy), and every alert carries its own recovery actions — **Restart**, **View Logs**, **Dismiss** on a crash; **Restart all** on a grouped incident (three or more crashes inside 90 seconds collapse into one message).
 
 The bot is a full control surface, not just a pager: `/procboss` (fleet at a glance), `/status`, `/alerts`, `/servers`, `/server`, `/process`, `/logs`, `/restart`, `/stop`, `/kill`, `/deploy`, `/settings` — type `/` in the DM to see them all with descriptions. State-changing actions confirm first (only you see the confirmation), and their results post as regular messages that record who acted. `/unlink` stops delivery; `/help` sums it up.
 

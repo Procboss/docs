@@ -27,7 +27,7 @@ You can close your own ticket anytime (**close ticket** button); replying to a c
 
 - **Email** — your account's address. Delivery needs the server's email sender configured (Resend); if it isn't yet, the pick saves and delivery waits — the picker says so honestly.
 - **Telegram** — your connected bot chat (the same pairing the alerts use).
-- **Discord** — your connected webhook.
+- **Discord** — your linked bot (the DM delivery).
 
 When you open a ticket you get a receipt; when staff replies, you get the reply and a link to the thread; when a ticket closes, you hear about that too. If your pick isn't connected, delivery falls back to the next reachable channel rather than staying silent — nothing pretends to have been sent.
 

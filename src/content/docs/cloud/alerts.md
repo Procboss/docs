@@ -93,5 +93,5 @@ The dashboard's Insights view reads that collected history back: pick a process,
 ## Related
 
 - [Agent API](/cloud/agent-api) — the wire kinds (`cpu.spike`, `mem.high`, …) and their fields.
-- [Notifications](/cloud/notifications) — where alerts land (Telegram, Discord, webhooks).
+- [Notifications](/cloud/notifications) — where alerts land (Telegram, Discord, email).
 - [Config reference](/guide/config) — the `alert*` process options.

@@ -1,6 +1,6 @@
 ---
 title: Notifications
-description: Connect Telegram and Discord to ProcBoss Cloud — crash, deploy and server alerts where you already are, with a one-time pairing code and verified webhooks.
+description: Connect Telegram and Discord to ProcBoss Cloud — crash, deploy and server alerts where you already are, with a one-time pairing code and a verified delivery path.
 section: cloud
 order: 4
 ---
@@ -65,14 +65,17 @@ The script registers `POST /api/integrations/telegram/webhook` with Telegram, se
 
 ## Discord
 
-Discord uses **incoming webhooks** — no bot token, no OAuth round-trip:
+Discord is a **DM-only bot** — it never joins a server and never posts to a channel:
 
-1. In your Discord server: channel settings → Integrations → **Create Webhook**, copy the URL.
-2. Paste it into **Settings → Integrations → Discord** and click Connect.
+1. Install the ProcBoss app **for your account** (never into a server) from the App Directory — the link is on **Settings → Integrations → Connect Discord**.
+2. Open a Direct Message with ProcBoss in your Discord client.
+3. Run `/link CODE` in that DM — the code is the one the dashboard shows you.
 
-ProcBoss verifies the webhook before saving it by posting a "ProcBoss connected" embed to the channel — if the embed doesn't arrive, the URL is rejected and nothing is stored. Alerts arrive as embeds color-coded by severity (red critical / amber warning / green info).
+That's the whole flow. Crash, deploy and server alerts then land in your DMs as embeds color-coded by severity (red critical / yellow warning / green info), and every alert carries its own recovery actions — **Restart**, **View Logs**, **Dismiss** on a crash; **Restart all** on a grouped incident (three or more crashes inside 90 seconds collapse into one message).
 
-Only `https://discord.com` / `discordapp.com` webhook URLs are accepted. Self-hosted relays can extend the list with `DISCORD_WEBHOOK_ALLOWED_HOSTS` (comma-separated; those entries may use plain http since you opted in explicitly).
+The bot is a full control surface, not just a pager: `/procboss` (fleet at a glance), `/status`, `/alerts`, `/servers`, `/server`, `/process`, `/logs`, `/restart`, `/stop`, `/kill`, `/deploy`, `/settings` — type `/` in the DM to see them all with descriptions. State-changing actions confirm first (only you see the confirmation), and their results post as regular messages that record who acted. `/unlink` stops delivery; `/help` sums it up.
+
+There is no webhook fallback and no channel delivery: alerts about your fleet are for your eyes only. Legacy webhook-era rows in the panel will say so and offer the relink path.
 
 ## Alert preferences
 
@@ -84,7 +87,7 @@ Only `https://discord.com` / `discordapp.com` webhook URLs are accepted. Self-ho
 | Deployments | deploy shipped / deploy failed |
 | Server up & down | agent offline (no state report for 45s) / back online — also CPU (≥ 90%) and memory (≥ 92%) threshold warnings, which alert once per crossing and re-arm only after the value drops 10 points below the threshold |
 
-Each test button sends a real message through the channel it belongs to — if delivery fails, the panel shows the recorded error (e.g. a revoked Discord webhook) instead of pretending it worked.
+Each test button sends a real message through the channel it belongs to — if delivery fails, the panel shows the recorded error (e.g. a user who unlinked or blocked the bot) instead of pretending it worked.
 
 ## What the alert looks like
 

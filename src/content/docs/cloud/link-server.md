@@ -51,7 +51,7 @@ The split is deliberate: revoking a server in the dashboard never logs you out o
 - Sends a **full state report on the tier heartbeat** (and after every command): 60 seconds by default — the cloud retunes it to your ProcBoss plan's cadence (Free 5 min, Basic/Growth 60s, Pro 30s, Business 15s) via the `report-interval` frame, no relink needed. Each report carries server CPU/memory and the process list with per-process CPU, memory, restarts, crashes, and uptime.
 - Reports **events** — crashes the moment they happen (exit facts and a log tail pushed at exit time, from the supervisor's own `process:crashed` signal) and restart / online / stopped transitions derived from consecutive snapshots — which the cloud turns into alert rows.
 - **Executes remote commands**: `process.list/start/stop/restart/delete/logs/deploy`, `server.info`, `server.deploy`. Each gets a result frame and triggers a fresh state report, so the dashboard reflects reality immediately.
-- **Tails logs live** when a dashboard opens them (`log.watch` / `log.unwatch`); new lines are pushed as they land on disk.
+- **Tails logs live** when a dashboard opens them (`log.watch` / `log.unwatch`); new lines are pushed as they land on disk. The tail lives exactly as long as the open logs page — close it and the tail stops; if the agent restarts mid-tail, the cloud re-arms the watch on its return.
 - Answers `pboss cloud servers` — the fleet list fetched by the daemon with the machine credential (the secret never leaves the daemon except toward the cloud).
 
 ## Revoking a machine

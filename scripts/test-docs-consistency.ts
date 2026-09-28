@@ -192,6 +192,20 @@ ok("runtimes: no silent Node fallback", runtimes.includes("no silent fallback"))
 ok("runtimes: native API map has all three runtimes", /`Bun\.spawn`/.test(runtimes) && /`node:child_process`/.test(runtimes) && /`Deno\.Command`/.test(runtimes));
 ok("runtimes: node:cluster scoped to Node", runtimes.includes("`node:cluster` is Node's own clustering module"));
 ok("runtimes: interpreter chain documented", /`bun run` → `deno run -A` → `node`/.test(runtimes) || /bun run` → `deno run -A` → `node --experimental-strip-types`/.test(runtimes));
+// 3c-2. The tsx integration (v1.5.1): TypeScript under Node runs through
+//        tsx — full TS, not just erasable syntax — with strip-types as the
+//        zero-dependency fallback. The docs must sell exactly that.
+ok("runtimes: tsx integration documented", runtimes.includes("[tsx](https://github.com/privatenumber/tsx)"));
+ok("runtimes: tsx lookup order documented", /Your app's own `node_modules`/.test(runtimes) && /`tsx` on `PATH`/.test(runtimes));
+ok("runtimes: tsx shipped as optional dependency", runtimes.includes("optional dependency of the pboss package"));
+ok("runtimes: strip-types kept as the fallback", runtimes.includes("zero-dependency fallback"));
+ok("runtimes: explicit interpreter stays verbatim (no tsx injection)", runtimes.includes("never injects tsx"));
+// 3c-3. First-class focus: JS/TS lead, other languages limited to one
+//        compact table — the owner's positioning request.
+ok("runtimes: first-class JS/TS claim", runtimes.includes("**JavaScript and TypeScript first-class treatment**"));
+ok("runtimes: other stacks compressed to one section", runtimes.includes("### Every other stack, still managed"));
+ok("runtimes: per-runtime run sections exist", /### Running Bun applications/.test(runtimes) && /### Running Node\.js applications/.test(runtimes) && /### Running Deno applications/.test(runtimes));
+ok("intro: in-addition positioning (trio first, everything else after)", intro.includes("In addition to that first-class Node, Bun and Deno support"));
 ok("runtimes: pboss --runtime documented", runtimes.includes("pboss --runtime"));
 ok("cluster: per-runtime spawn table", cluster.includes("`Bun.spawn`") && cluster.includes("`node:child_process`") && cluster.includes("`Deno.Command`"));
 ok("cluster: node:cluster belongs to Node only", cluster.includes("it belongs to Node only"));

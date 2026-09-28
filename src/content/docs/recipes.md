@@ -10,24 +10,17 @@ Short, copy-pasteable recipes for real situations. Each links to the full refere
 ## Language quick starts
 
 ```bash
-# TypeScript / Bun server
-pboss start server.ts --name bun-api
+# TypeScript server — runs on Bun, Deno, or Node (via tsx) per the chain
+pboss start server.ts --name ts-api
 
-# Node.js server
+# Node.js server, pinned
 pboss start server.js --interpreter node --name node-api
 
-# Go — source in dev, binary in prod
-pboss start main.go --name go-dev
-pboss start ./dist/my-go-server --name go-prod --instances 4
-
-# Python worker
-pboss start worker.py --name py-worker
-
-# Java JAR service
-pboss start app.jar --name java-service
+# Deno server, pinned, with a scoped permission set
+pboss start server.ts --interpreter "deno run --allow-net" --name deno-api
 ```
 
-The full runtime matrix — Rust, Ruby, PHP, shell, Windows scripts, custom interpreters — lives in [Runtimes](/runtimes).
+Every other stack works the same way, detected by extension — `pboss start worker.py`, `pboss start main.go`, `pboss start app.jar`, `pboss start ./my-go-server` — the full table lives in [Runtimes](/runtimes).
 
 ## Production API with clustering and health checks
 

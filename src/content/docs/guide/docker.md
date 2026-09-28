@@ -132,12 +132,12 @@ containers:
 | Suitable for Docker / containers | ❌ | ✅ |
 | Suitable for long-running servers | ✅ | ✅ |
 
-## Not running Bun apps?
+## Not running a Bun app?
 
-Foreground mode works for every runtime pboss supports — the container story is the same for a Go binary, a Python worker, or a Java JAR:
+Foreground mode works for every runtime pboss supports — Node.js, Deno, a Go binary, a Python worker, a Java JAR — the container story is the same:
 
 ```dockerfile
 CMD ["pboss", "start", "--no-daemon", "./dist/my-go-server"]
 ```
 
-See [Runtimes](/runtimes) for the full matrix — both the runtimes pboss executes on (Bun, Node.js, Deno) and the languages it manages.
+See [Runtimes](/runtimes) — first-class Bun, Node.js, and Deno (the same three the pboss daemon itself runs on), plus the other stacks it manages.

@@ -7,7 +7,7 @@ order: 1
 
 **ProcBoss** comes in two parts that work independently and together:
 
-- **pboss** — a runtime-agnostic process manager for **Bun, Node.js, and Deno**. It runs on whichever runtime your machine already has, through that runtime's **own native APIs** — no compatibility layers, no lowest-common-denominator mode, no forced dependencies. From there it manages any application: Node.js, Bun, Deno, Go, Python, Rust, Ruby, PHP, Java, binaries, shell scripts. Open source (GPLv3), by [procboss.com](https://procboss.com).
+- **pboss** — a runtime-agnostic process manager for **Bun, Node.js, and Deno**. It runs on whichever runtime your machine already has, through that runtime's **own native APIs** — no compatibility layers, no lowest-common-denominator mode, no forced dependencies. In addition to that first-class Node, Bun and Deno support, it also manages everything else on the machine: Go, Python, Rust, Ruby, PHP, Java, binaries, shell scripts. Open source (GPLv3), by [procboss.com](https://procboss.com).
 - **ProcBoss Cloud** (procboss.com) — the optional hosted layer: link the servers you already run, get fleet visibility, alerts, and metrics from one dashboard.
 
 ## Runtime-agnostic, not runtime-generic
@@ -25,12 +25,13 @@ See [Runtimes](/runtimes) for the full architecture — the adapter layer, the d
 
 pboss is a production-grade process supervisor that speaks each runtime's native language. The daemon starts in under 50ms and idles around ~12MB of RAM on every supported runtime. It is one binary-shaped package — install once with any package manager, and it manages everything else on the machine.
 
-The managed side is just as broad: interpreters are auto-detected per application, so a TypeScript worker, a compiled Go binary, and a Python cron job live side by side in one process list with one set of commands.
+The managed side follows the same focus: JavaScript and TypeScript apps get first-class treatment — per-machine runner resolution (`bun run` → `deno run -A` → `node`, with TypeScript under Node powered by [tsx](https://github.com/privatenumber/tsx)) — while every other stack on the machine (a compiled Go binary, a Python cron job, a Java JAR) is auto-detected by extension and supervised with the same commands.
 
 ## Feature highlights
 
 - **Runtime-agnostic core** — executes under Bun, Node.js, or Deno, each through its native APIs ([Runtimes](/runtimes)).
-- **Any language, any stack** — managed apps auto-detect their runner: Node.js, Bun, Deno, Go, Python, Rust, Ruby, PHP, Java JARs, shell scripts, compiled binaries.
+- **First-class JS/TS runtimes** — managed JavaScript and TypeScript apps resolve their runner per machine: `bun run` → `deno run -A` → `node`, TypeScript under Node through tsx ([Runtimes](/runtimes)).
+- **Every other stack, still managed** — Go, Python, Rust, Ruby, PHP, Java JARs, shell scripts, and compiled binaries run side by side with the same lifecycle, detected by file extension, overridable with `--interpreter`.
 - **Process management** — start, stop, restart, reload, delete, scale; crash restart, restart strategies, memory-limit restarts, tree killing.
 - **Cluster mode** — N instances, per-worker env, automatic ports, zero-downtime rolling reloads; spawned by your runtime's native process API ([Cluster mode](/cli/cluster)).
 - **Foreground mode** — `--no-daemon` blocks as PID 1, for Docker and Kubernetes.

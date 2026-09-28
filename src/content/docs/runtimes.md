@@ -1,6 +1,6 @@
 ---
 title: Runtimes
-description: pboss is runtime-agnostic — one package that executes natively on Bun, Node.js, or Deno through each runtime's own APIs — and manages applications in every language.
+description: pboss is runtime-agnostic — one package that executes natively on Bun, Node.js, or Deno through each runtime's own APIs — and manages JavaScript and TypeScript first-class, with every other language alongside.
 section: getting-started
 order: 4
 ---
@@ -83,7 +83,7 @@ When you scale an app (`--instances 4`), each worker is an independent process s
 
 ## The runtimes pboss manages
 
-pboss runs and supervises any application, programming language, runtime, or compiled binary. Interpreters for JS/TS apps are auto-detected per machine; anything else is auto-detected from the file extension, and you can override any of it with `--interpreter`.
+pboss gives **JavaScript and TypeScript first-class treatment**: Bun, Node.js, and Deno apps resolve their runner per machine — `bun run` → `deno run -A` → `node` — natively, with no interpreter configuration. In addition to that trio, pboss manages everything else on the machine — other languages, compiled binaries, and shell scripts — detected by file extension, overridable with `--interpreter`.
 
 ### The JS/TS interpreter chain
 
@@ -91,61 +91,31 @@ On a machine with several runtimes, JavaScript and TypeScript apps resolve their
 
 1. **Bun** — `bun run` (TS-native; pboss's original worker runtime)
 2. **Deno** — `deno run -A` (TS-native)
-3. **Node.js** — plain `node` for `.js`/`.mjs`/`.cjs`; `--experimental-strip-types` for `.ts`/`.tsx`/`.jsx`/`.mts` on Node ≥ 22.6
+3. **Node.js** — plain `node` for `.js`/`.mjs`/`.cjs`; for TypeScript, **[tsx](https://github.com/privatenumber/tsx)** when usable, falling back to `--experimental-strip-types` on Node ≥ 22.6
 
 `--interpreter` overrides the chain per app — for example `--interpreter node` pins Node semantics for one process even where Bun exists.
 
-### Runtime matrix
+### TypeScript under Node: tsx
 
-| Runtime / Language | File extension | Auto-detected runner | Example |
-|---|---|---|---|
-| **TypeScript / JSX** | `.ts`, `.tsx`, `.jsx`, `.mts` | `bun run` → `deno run -A` → `node --experimental-strip-types` | `pboss start server.ts` |
-| **JavaScript** | `.js`, `.mjs`, `.cjs` | `bun run` → `deno run -A` → `node` | `pboss start app.js` |
-| **Python** | `.py` | `python3 <file>` (or `python`) | `pboss start worker.py` |
-| **Go** | `.go` | `go run <file>` | `pboss start main.go` |
-| **Compiled binaries (Go / Rust / C / C++)** | *(no ext)*, `.bin`, `.exe` | Direct binary execution | `pboss start ./my-go-server` |
-| **Ruby** | `.rb` | `ruby <file>` | `pboss start app.rb` |
-| **PHP** | `.php` | `php <file>` | `pboss start server.php` |
-| **Java** | `.jar` | `java -jar <file>` | `pboss start app.jar` |
-| **Shell / Bash** | `.sh`, `.bash` | `sh <file>` / `bash <file>` | `pboss start job.sh` |
-| **Windows scripts** | `.bat`, `.cmd`, `.ps1` | `cmd.exe` / `powershell.exe` | `pboss start script.bat` |
-| **Custom interpreter** | *any* | Custom runtime via `--interpreter` | `pboss start app.ts --interpreter "deno run -A"` |
+Node's built-in type stripping only handles **erasable** TypeScript — it rejects enums, namespaces, parameter properties, and other syntax that needs a real transform. So when the chain lands on Node for a `.ts`/`.tsx`/`.jsx`/`.mts` file, pboss runs it through **[tsx](https://github.com/privatenumber/tsx)**, the established TypeScript runner for Node — full TypeScript, tsconfig `paths` included. A usable copy is found in this order:
 
-### How pboss finds the JS/TS interpreter
+1. **Your app's own `node_modules`** — the version your app pinned wins
+2. **`tsx` on `PATH`** — a global install
+3. **The copy pboss ships** — tsx is an optional dependency of the pboss package, so an npm/bun global install of pboss carries one
 
-JavaScript and TypeScript workers are spawned by the **daemon** — and the daemon often runs where no login shell ever set a `PATH`: as a systemd service on Linux, a launchd agent on macOS, or a scheduled task on Windows. A PATH-only lookup would miss the most common install locations even though `which bun` finds them in your shell.
+When none is usable, Node's `--experimental-strip-types` (Node ≥ 22.6) remains the zero-dependency fallback. An explicit `--interpreter node` is always verbatim — pboss never injects tsx over a deliberate choice.
 
-**For Bun**, pboss resolves through a full chain, in order: `PATH` → `$BUN_INSTALL/bin` → `~/.bun/bin` → `/usr/local/bin`, `/usr/bin`, `/opt/bun/bin` → `/opt/homebrew/bin` (macOS Homebrew on Apple Silicon, not on a launchd PATH).
-
-**For Deno and Node**, the same rule with their locations: Deno through `PATH` then `~/.deno/bin`; Node through `PATH` then `/usr/local/bin` — plus one shortcut: when pboss itself runs under Node, the executing `node` is the interpreter.
-
-Three layers make this work everywhere: the worker spawn uses the **absolute resolved path** (surviving any PATH); the boot service's `PATH` includes the user's `~/.bun/bin` when present (workers that call a runtime by name resolve); and the daemon prepends the discovered runtime directory to its own `PATH` at startup, healing daemons started by older service definitions. If no runtime exists at all, the error lists every location checked, per runtime, before suggesting `--interpreter` or `--interpreter none`.
-
-### Running native binaries (Go, Rust, C/C++)
-
-Compiled executables are executed directly with zero interpreter wrapper:
+### Running Bun applications
 
 ```bash
-# Start a compiled Go or Rust binary
-pboss start ./dist/my-go-api --name api --instances 4
+# TypeScript, JS, JSX — bun runs them all natively
+pboss start server.ts --name bun-api
 
-# Run with explicit direct binary mode
-pboss start ./my-binary --interpreter none
+# Pass Bun flags
+pboss start server.ts --node-args "--smol"
 ```
 
-Everything else works identically: `--instances`, `--max-memory-restart`, health checks, log rotation, and the dashboard all apply to native binaries the same way they apply to scripts.
-
-### Running Python services
-
-```bash
-# Auto-detects python3 on Linux/macOS or python on Windows
-pboss start worker.py --name py-worker
-
-# Custom virtualenv Python interpreter
-pboss start worker.py --interpreter ./venv/bin/python
-```
-
-Pointing `--interpreter` at a virtualenv's Python is the recommended way to run venv-based services — the process runs with the venv's packages without any activation step.
+Where Bun is installed it sits at the top of the chain above — every JS/TS app defaults to it, which is also the runtime pboss itself was born on.
 
 ### Running Node.js applications
 
@@ -157,7 +127,7 @@ pboss start server.js --interpreter node --name node-api
 pboss start server.js --interpreter node --node-args "--max-old-space-size=4096"
 ```
 
-Where Bun is installed, JS/TS apps default to it (the top of the chain above); `--interpreter node` opts a specific process into Node.js semantics. PM2-style apps port over directly, and a machine with only Node installed runs every JS/TS app on Node — TypeScript included, via type stripping on Node ≥ 22.6.
+A machine with only Node installed runs every JS/TS app on Node — TypeScript included, through tsx per the chain above. PM2-style apps port over directly; `--interpreter node` opts a specific process into Node.js semantics where Bun exists.
 
 ### Running Deno applications
 
@@ -171,41 +141,33 @@ pboss start server.ts --interpreter "deno run --allow-net --allow-read" --name d
 
 The interpreter chain picks Deno automatically when Bun is absent; the explicit form above pins it and lets you choose your **app's** permission set. pboss itself under Deno is a separate question — see [Installation](/installation#denos-permission-system) for the permissions the process manager needs.
 
-### Custom interpreters
+### Every other stack, still managed
 
-Any executable can serve as the interpreter, with arguments:
+Beyond the first-class trio, runners are auto-detected from the file extension — same lifecycle, same restart policies, same logs, same dashboard:
+
+| Language | Extension | Runner | Example |
+|---|---|---|---|
+| Python | `.py` | `python3` (or `python`) | `pboss start worker.py` |
+| Go | `.go` | `go run` | `pboss start main.go` |
+| Ruby / PHP | `.rb` / `.php` | `ruby` / `php` | `pboss start app.rb` |
+| Java | `.jar` | `java -jar` | `pboss start app.jar` |
+| Shell | `.sh`, `.bash` | `sh` / `bash` | `pboss start job.sh` |
+| Windows scripts | `.bat`, `.cmd`, `.ps1` | `cmd.exe` / `powershell.exe` | `pboss start script.bat` |
+| Compiled binaries (Go / Rust / C / C++) | *(no ext)*, `.bin`, `.exe` | direct execution | `pboss start ./my-go-server` |
+
+Any executable can serve as the interpreter, with arguments — including a virtualenv's Python (`--interpreter ./venv/bin/python`, the recommended venv pattern, no activation step) or a fully permission-scoped Deno invocation:
 
 ```bash
 pboss start app.ts --interpreter "deno run -A"
-```
-
-The `--interpreter-args` flag separates interpreter arguments from your script's arguments if you prefer them split:
-
-```bash
 pboss start script.py --interpreter python3 --interpreter-args "-u"
 ```
 
-### Recipes
+### How pboss finds the JS/TS interpreter
 
-```bash
-# TypeScript server — runs on Bun, Deno, or Node per the chain above
-pboss start server.ts --name ts-api
+JavaScript and TypeScript workers are spawned by the **daemon** — and the daemon often runs where no login shell ever set a `PATH`: as a systemd service on Linux, a launchd agent on macOS, or a scheduled task on Windows. A PATH-only lookup would miss the most common install locations even though `which bun` finds them in your shell.
 
-# Node.js server, pinned
-pboss start server.js --interpreter node --name node-api
+**For Bun**, pboss resolves through a full chain, in order: `PATH` → `$BUN_INSTALL/bin` → `~/.bun/bin` → `/usr/local/bin`, `/usr/bin`, `/opt/bun/bin` → `/opt/homebrew/bin` (macOS Homebrew on Apple Silicon, not on a launchd PATH).
 
-# Deno server, pinned, with a scoped permission set
-pboss start server.ts --interpreter "deno run --allow-net" --name deno-api
+**For Deno and Node**, the same rule with their locations: Deno through `PATH` then `~/.deno/bin`; Node through `PATH` then `/usr/local/bin` — plus one shortcut: when pboss itself runs under Node, the executing `node` is the interpreter.
 
-# Go — source in dev, binary in prod
-pboss start main.go --name go-dev
-pboss start ./dist/my-go-server --name go-prod --instances 4
-
-# Python worker
-pboss start worker.py --name py-worker
-
-# Java JAR service
-pboss start app.jar --name java-service
-```
-
-Whatever you start, the rest of pboss applies: restart policies, [cluster mode](/cli/cluster) (where the app supports multiple instances), [log management](/cli/logs), [health checks](/guide/config#health-check-options), and the [dashboard](/cli/dashboard).
+Three layers make this work everywhere: the worker spawn uses the **absolute resolved path** (surviving any PATH); the boot service's `PATH` includes the user's `~/.bun/bin` when present (workers that call a runtime by name resolve); and the daemon prepends the discovered runtime directory to its own `PATH` at startup, healing daemons started by older service definitions. If no runtime exists at all, the error lists every location checked, per runtime, before suggesting `--interpreter` or `--interpreter none`.

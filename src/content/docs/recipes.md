@@ -27,7 +27,7 @@ pboss start worker.py --name py-worker
 pboss start app.jar --name java-service
 ```
 
-The full runtime matrix — Rust, Ruby, PHP, shell, Windows scripts, custom interpreters — lives in [Languages & runtimes](/runtimes).
+The full runtime matrix — Rust, Ruby, PHP, shell, Windows scripts, custom interpreters — lives in [Runtimes](/runtimes).
 
 ## Production API with clustering and health checks
 
@@ -85,6 +85,8 @@ One file, both environments, independently addressable: `pboss restart api-stagi
 
 ## Docker container (foreground mode)
 
+A Bun-based app, on the Bun image:
+
 ```dockerfile
 FROM oven/bun:latest
 WORKDIR /app
@@ -93,6 +95,18 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun add -g pboss
 CMD ["pboss", "start", "--no-daemon", "./server.ts"]
+```
+
+A Node.js app looks the same on the Node image — pboss installs and runs through whatever runtime the container already has:
+
+```dockerfile
+FROM node:22-slim
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm install -g pboss
+CMD ["pboss", "start", "--no-daemon", "./server.js"]
 ```
 
 `--no-daemon` keeps pboss as the foreground entrypoint so the container stays up. Compose, Kubernetes, and the `--raw` logging pattern are in [Foreground mode & Docker](/guide/docker).

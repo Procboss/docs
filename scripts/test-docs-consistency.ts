@@ -3,25 +3,31 @@
  * test-docs-consistency.ts — docs-vs-implementation consistency check.
  *
  * Owner rule: "For every update, write a test to confirm."
- * Guards the documentation contract of the installer target selection
- * (2026-09-10: no root, ever — ~/.local/bin per-user install with an
- * automatic PATH self-heal in the shell profile, per-user boot service):
  *
- *   1. The retired long "privileges/BUN_INSTALL" explainer paragraphs are
- *      gone (the noise the owner had removed).
- *   2. No sudo command appears in any docs page or pboss DOCS.md/README —
+ * Guards two documentation contracts:
+ *
+ * A. The per-user install contract (2026-09-10: no root, ever — user unit
+ *    dir, systemctl --user, enable-linger, the PATH self-heal):
+ *   1. No sudo command appears in any docs page or pboss DOCS.md/README —
  *      sudo is never invoked by the installer; the only tolerated mentions
- *      are prose statements about the legacy root pipe (running AS root
- *      still works), negative statements ("no root", "never required"),
- *      and the snap channel, where refreshing is inherently sudo (snapd
- *      design).
- *   3. The per-user facts ARE documented: user unit dir, systemctl --user,
- *      enable-linger, ~/.local/bin (with the PATH auto-add),
- *      %LOCALAPPDATA%\pboss.
- *   4. No stale system-service claims remain (/etc/systemd/system unit,
- *      multi-user.target, system-wide BUN_INSTALL flow).
- *   5. The pboss DOCS.md startup status example matches what the code
- *      actually prints (per-user header + Linger line).
+ *      are prose statements and the snap channel (snapd design).
+ *   2. The per-user facts ARE documented: user unit dir, systemctl --user,
+ *      enable-linger.
+ *   3. No stale system-service claims remain.
+ *
+ * B. The runtime-agnostic contract (pboss 1.5.0: one package executes under
+ *    Bun, Node.js, or Deno, each through its OWN native APIs; the installer
+ *    ensures at least one runtime exists, never selects one, installs the
+ *    published npm package globally):
+ *   1. The old "universal process manager" tagline and "built on Bun"
+ *      positioning are gone from every page.
+ *   2. installation.md states the any-ONE-of-three requirement, documents
+ *      bun/npm/deno global installs, and covers Deno's permission system.
+ *   3. runtimes.md documents the adapter layer, the detection order, the
+ *      native API map, and the interpreter chain.
+ *   4. cluster.md keeps every runtime's clustering native (node:cluster is
+ *      Node's own module — never pboss's mechanism under Bun or Deno).
+ *   5. The pboss DOCS.md startup status example matches the code output.
  *
  * Run: bun scripts/test-docs-consistency.ts   (exit 0 = all checks pass)
  */
@@ -73,6 +79,12 @@ const noiseFragments: Array<[string, string]> = [
   ["boot-persistence auto explainer", "enables **boot persistence** automatically"],
   ["runtime version-floor essay", "Bun 1.1.30 or higher"],
   ["embedded-runtime reassurance", "embeds the Bun runtime and needs nothing else"],
+  // The retired pre-1.5.0 positioning (owner: "instead of we saying its a
+  // universal process manager, we can say a runtime agnostic process manager
+  // for bun, node and deno, without sacrificing the native performances").
+  ["old universal tagline", "universal process manager"],
+  ["old bun-only positioning", "built on Bun native APIs"],
+  ["old bun-only positioning (prose)", "built on native Bun APIs"],
 ];
 
 for (const [name, fragment] of noiseFragments) {
@@ -114,17 +126,19 @@ for (const file of [...sitePages, ...pbossDocs]) {
 const installation = readFileSync(join(DOCS_SITE, "installation.md"), "utf8");
 const startup = readFileSync(join(DOCS_SITE, "cli", "startup.md"), "utf8");
 const quickstart = readFileSync(join(DOCS_SITE, "quickstart.md"), "utf8");
+const runtimes = readFileSync(join(DOCS_SITE, "runtimes.md"), "utf8");
+const cluster = readFileSync(join(DOCS_SITE, "cli", "cluster.md"), "utf8");
+const intro = readFileSync(join(DOCS_SITE, "intro.md"), "utf8");
 
 ok("installation: no-privileges requirement stated", /Privileges:\*\* none/.test(installation));
-ok("installation: ~/.local/bin fallback documented", installation.includes("~/.local/bin"));
-ok("installation: %LOCALAPPDATA%\\pboss default", installation.includes("%LOCALAPPDATA%\\pboss"));
+ok("installation: pre-1.5.0 ~/.local/bin upgrade note", installation.includes("~/.local/bin"));
+ok("installation: PATH auto-add on the per-user dir documented", installation.includes("adds it to your `PATH` automatically"));
 ok("installation: bun add -g without sudo", /```bash\nbun add -g pboss\n```/.test(installation));
 ok("installation: one-liner has no sudo", !/curl -fsSL https:\/\/procboss\.com\/install\.sh \| sudo/.test(installation));
 // The no-root target contract (owner request, 2026-09-10): "we still dont
 // need root … if ~/.local/bin is not in PATH in ~/.bashrc, then add it" —
 // the installer NEVER invokes sudo; a missing PATH entry is added to the
 // shell profile automatically instead of noted.
-ok("installation: PATH auto-add on the per-user dir documented", installation.includes("adds it to your `PATH` automatically"));
 ok("installation: no sudo-optional claim", !installation.includes("sudo is optional"));
 ok("installation: no PBOSS_INSTALL_DIR / PBOSS_NO_SUDO overrides", !/PBOSS_(INSTALL_DIR|NO_SUDO)/.test(installation));
 ok("pboss DOCS.md: PATH self-heal mirrored", readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes("adds it to your shell profile"));
@@ -146,6 +160,42 @@ for (const [name, fact] of [
 ] as Array<[string, string]>) {
   ok(`site documents: ${name}`, combinedSite.includes(fact));
 }
+
+// ---------------------------------------------------------------------------
+// 3b. The runtime-agnostic install contract (pboss 1.5.0).
+// ---------------------------------------------------------------------------
+ok("installation: any-ONE-of-three runtimes requirement", /any ONE of/.test(installation));
+ok("installation: npm global install documented", /```bash\nnpm install -g pboss\n```/.test(installation));
+ok("installation: deno global install documented", /deno install -g npm:pboss/.test(installation));
+ok("installation: deno permission section exists", installation.includes("### Deno's permission system"));
+ok("installation: deno --allow-run documented", installation.includes("`--allow-run`"));
+ok("installation: deno --allow-net documented", installation.includes("`--allow-net`"));
+ok("installation: deno recommended install with flags", installation.includes("deno install -g --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss"));
+ok("installation: deno -A short form documented", installation.includes("deno install -g -A npm:pboss"));
+ok("installation: installer never selects a runtime", installation.includes("never selects a runtime"));
+ok("installation: no runtime-preference instruction", !/set `?PBOSS_RUNTIME/i.test(installation));
+ok("installation: at-least-one runtime table", installation.includes("nothing installed, nothing selected"));
+ok("installation: published package, no compiling", /never compiles anything/.test(installation));
+ok("installation: pre-1.5.0 upgrade path documented", /pre-1\.5\.0/.test(installation));
+ok("installation: node engines floor documented", installation.includes("≥ 20.19"));
+
+// ---------------------------------------------------------------------------
+// 3c. The runtime-agnostic architecture contract.
+// ---------------------------------------------------------------------------
+ok("intro: runtime-agnostic positioning", intro.includes("runtime-agnostic process manager for **Bun, Node.js, and Deno**"));
+ok("intro: no-runtime-forced claim", intro.includes("No runtime is forced on you"));
+ok("runtimes: the principle stated", runtimes.includes("runtime-agnostic, not runtime-generic"));
+ok("runtimes: native APIs not sacrificed", /native APIs/.test(runtimes) && /never a compatibility layer/.test(runtimes));
+ok("runtimes: adapter layer documented", runtimes.includes("### The adapter layer"));
+ok("runtimes: detection order documented (Bun before Node)", runtimes.includes("Bun also exposes `process.versions.node`"));
+ok("runtimes: no silent Node fallback", runtimes.includes("no silent fallback"));
+ok("runtimes: native API map has all three runtimes", /`Bun\.spawn`/.test(runtimes) && /`node:child_process`/.test(runtimes) && /`Deno\.Command`/.test(runtimes));
+ok("runtimes: node:cluster scoped to Node", runtimes.includes("`node:cluster` is Node's own clustering module"));
+ok("runtimes: interpreter chain documented", /`bun run` → `deno run -A` → `node`/.test(runtimes) || /bun run` → `deno run -A` → `node --experimental-strip-types`/.test(runtimes));
+ok("runtimes: pboss --runtime documented", runtimes.includes("pboss --runtime"));
+ok("cluster: per-runtime spawn table", cluster.includes("`Bun.spawn`") && cluster.includes("`node:child_process`") && cluster.includes("`Deno.Command`"));
+ok("cluster: node:cluster belongs to Node only", cluster.includes("it belongs to Node only"));
+ok("cluster: reusePort guidance kept", cluster.includes("reusePort"));
 
 // ---------------------------------------------------------------------------
 // 4. No stale system-service claims.
@@ -194,7 +244,6 @@ ok("agent-api: event outbox / at-least-once described", agentApi.includes("outbo
 ok("agent-api: watchdog documented", agentApi.includes("watchdog"));
 ok("agent-api: jittered backoff documented", agentApi.includes("jittered"));
 ok("agent-api: TLS refusal documented", agentApi.includes("PBOSS_CLOUD_ALLOW_INSECURE"));
-
 //     link confirmation: the hello gate, the dual-transport credential, and
 //     the replaced close code are the proxy-mirage hardening (2026-09).
 ok("agent-api: hello confirmation documented", agentApi.includes("`hello` — the registration ack"));

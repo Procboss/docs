@@ -56,6 +56,25 @@ RUN bun add -g pboss
 CMD ["pboss", "start", "--no-daemon", "./server.ts"]
 ```
 
+### The same container on Node.js or Deno
+
+pboss installs and runs through whatever runtime the image already has — swap the base image and the package manager, keep everything else:
+
+```dockerfile
+FROM node:22-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+RUN npm install -g pboss
+
+CMD ["pboss", "start", "--no-daemon", "./server.js"]
+```
+
 ### Docker logs and log files
 
 Use `--raw` with `--no-daemon` to keep pboss log files while also exposing the managed process output to the container runtime:
@@ -121,4 +140,4 @@ Foreground mode works for every runtime pboss supports — the container story i
 CMD ["pboss", "start", "--no-daemon", "./dist/my-go-server"]
 ```
 
-See [Languages & runtimes](/runtimes) for the full matrix.
+See [Runtimes](/runtimes) for the full matrix — both the runtimes pboss executes on (Bun, Node.js, Deno) and the languages it manages.

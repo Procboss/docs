@@ -60,7 +60,7 @@ pboss start server.ts --log-max-size 50M --log-retain 10 --log-compress
 1. It is renamed with a numeric suffix.
 2. Existing rotated files are shifted up by one number.
 3. Files beyond the `--log-retain` count are deleted.
-4. If `--log-compress` is enabled, rotated files are gzip-compressed using Bun's native `Bun.gzipSync`.
+4. If `--log-compress` is enabled, rotated files are gzip-compressed with the executing runtime's native compression — `Bun.gzipSync` under Bun, `node:zlib` under Node and Deno.
 
 ### Defaults
 

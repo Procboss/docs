@@ -81,7 +81,7 @@ Details in [Startup scripts](/cli/startup).
 
 ## Where to go next
 
-- **Not running Bun?** pboss manages Go, Python, Node.js, Java, and more — see [Languages & runtimes](/runtimes).
+- **Any runtime, any stack.** pboss itself runs on Bun, Node.js, or Deno — and manages Go, Python, Java, and everything else — see [Runtimes](/runtimes).
 - **Multiple services, one repo?** Declare them in an [ecosystem file](/cli/ecosystem).
 - **Running more instances?** Read [Cluster mode](/cli/cluster).
 - **Deploying to containers?** Use [foreground mode](/guide/docker).

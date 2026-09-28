@@ -7,9 +7,9 @@ export const siteConfig = {
   url: "https://docs.procboss.com",
   /** Docs site title used in <title> and the header. */
   name: "ProcBoss Docs",
-  /** The product: open-source Bun-native process manager. */
+  /** The product: runtime-agnostic process manager — runs on Bun, Node.js, or Deno. */
   product: "pboss",
-  productVersion: "v1.4.7",
+  productVersion: "v1.5.0",
   /** Links out. */
   links: {
     /** Open-source CLI repo. */

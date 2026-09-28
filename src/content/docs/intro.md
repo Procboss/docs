@@ -1,24 +1,38 @@
 ---
 title: Introduction
-description: What ProcBoss is — pboss, the universal open-source process manager built on Bun, and ProcBoss Cloud for fleet visibility across your servers.
+description: What ProcBoss is — pboss, the runtime-agnostic process manager that runs on Bun, Node.js, or Deno through each runtime's native APIs, and ProcBoss Cloud for fleet visibility across your servers.
 section: getting-started
 order: 1
 ---
 
 **ProcBoss** comes in two parts that work independently and together:
 
-- **pboss** — a blazing-fast, universal process manager built on Bun native APIs. Run, cluster, monitor, and manage any application — Node.js, Bun, Go, Python, Rust, Ruby, PHP, Java, binaries, shell scripts. Open source (GPLv3), by [procboss.com](https://procboss.com).
+- **pboss** — a runtime-agnostic process manager for **Bun, Node.js, and Deno**. It runs on whichever runtime your machine already has, through that runtime's **own native APIs** — no compatibility layers, no lowest-common-denominator mode, no forced dependencies. From there it manages any application: Node.js, Bun, Deno, Go, Python, Rust, Ruby, PHP, Java, binaries, shell scripts. Open source (GPLv3), by [procboss.com](https://procboss.com).
 - **ProcBoss Cloud** (procboss.com) — the optional hosted layer: link the servers you already run, get fleet visibility, alerts, and metrics from one dashboard.
+
+## Runtime-agnostic, not runtime-generic
+
+One published package, three runtimes. `npm install -g pboss`, `bun add -g pboss`, or `deno install -g npm:pboss` all deliver the same CLI — and the runtime that executes it is the one you already have:
+
+- **No runtime is forced on you.** Any one of Bun, Node.js, or Deno is enough. The installer never selects a runtime, and no preference is ever persisted — the executing runtime is detected at run time, every run.
+- **Native performance and features, per runtime.** Under Bun, pboss supervises with `Bun.spawn`, serves the dashboard with `Bun.serve`, reads files with `Bun.file`. Under Node, it is `node:child_process`, `node:http`, and `node:fs/promises`. Under Deno, `Deno.Command`, `Deno.serve`, and the `Deno.*` file APIs. Nothing is routed through another runtime's compatibility layer.
+- **Detected once, reported honestly.** The runtime is identified exactly once at startup; `pboss --runtime` tells you the truth on demand.
+- **Same features everywhere.** Process lifecycle, cluster mode, logs, health checks, cron restarts, watch mode, the dashboard, and Prometheus metrics behave identically under all three runtimes.
+
+See [Runtimes](/runtimes) for the full architecture — the adapter layer, the detection order, and the native API map.
 
 ## Why pboss?
 
-pboss is a production-grade, runtime-agnostic process manager built on native Bun APIs — it manages any program, language, or stack. `Bun.spawn` for orchestration, `Bun.serve` for the dashboard and IPC, native `WebSocket` over Unix sockets, `Bun.file` for I/O, `Bun.gzipSync` for log compression. One daemon: <50ms start, ~12MB RAM.
+pboss is a production-grade process supervisor that speaks each runtime's native language. The daemon starts in under 50ms and idles around ~12MB of RAM on every supported runtime. It is one binary-shaped package — install once with any package manager, and it manages everything else on the machine.
+
+The managed side is just as broad: interpreters are auto-detected per application, so a TypeScript worker, a compiled Go binary, and a Python cron job live side by side in one process list with one set of commands.
 
 ## Feature highlights
 
-- **Universal multi-language support** — auto-detected: Node.js, Bun, Go, Python, Rust, Ruby, PHP, Java JARs, shell scripts, compiled binaries. See [Languages & runtimes](/runtimes).
+- **Runtime-agnostic core** — executes under Bun, Node.js, or Deno, each through its native APIs ([Runtimes](/runtimes)).
+- **Any language, any stack** — managed apps auto-detect their runner: Node.js, Bun, Deno, Go, Python, Rust, Ruby, PHP, Java JARs, shell scripts, compiled binaries.
 - **Process management** — start, stop, restart, reload, delete, scale; crash restart, restart strategies, memory-limit restarts, tree killing.
-- **Cluster mode** — N instances, per-worker env, automatic ports, zero-downtime rolling reloads.
+- **Cluster mode** — N instances, per-worker env, automatic ports, zero-downtime rolling reloads; spawned by your runtime's native process API ([Cluster mode](/cli/cluster)).
 - **Foreground mode** — `--no-daemon` blocks as PID 1, for Docker and Kubernetes.
 - **Web dashboard** — live WebSocket updates, CPU/memory charts, process controls, log viewer. Zero dependencies.
 - **Prometheus metrics** — dedicated `/metrics` endpoint, ready for Grafana.
@@ -26,7 +40,7 @@ pboss is a production-grade, runtime-agnostic process manager built on native Bu
 - **Health checks** — HTTP probes with interval, timeout, and failure threshold; unhealthy processes restart.
 - **Cron restarts** — scheduled restarts with standard cron expressions.
 - **File watching** — restart on changes, with configurable paths and ignore patterns.
-- **Ecosystem files** — declare your whole topology in one JSON or TypeScript file.
+- **Ecosystem files** — declare your whole topology in one JSON, JS, or TypeScript file.
 - **Persistence (default on)** — process list saved after every change; boot service installed at install time — apps survive restarts and reboots.
 - **Remote deployment** — SSH deploys with git pull, release directories, symlink rotation, pre/post hooks.
 - **Environment management** — per-process env vars, with `.env` file support.
@@ -49,7 +63,7 @@ The CLI is the same tool in both cases. The cloud layer is purely additive: `pbo
 ## Where to go next
 
 - New to pboss? Start with [Installation](/installation), then the [Quickstart](/quickstart).
-- Not running Bun? Read [Languages & runtimes](/runtimes) — pboss manages Go, Python, Java, and more.
+- Which runtime will pboss use on your machine — and how does it stay native on each? Read [Runtimes](/runtimes).
 - Running processes in production? Read [Foreground mode & Docker](/guide/docker) and [Startup scripts](/cli/startup).
 - Curious how it works inside? Read [Architecture](/architecture).
 - Want cookbook patterns? Browse [Recipes](/recipes).

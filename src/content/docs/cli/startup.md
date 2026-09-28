@@ -32,7 +32,7 @@ pboss startup install
 
 Running it under `sudo` is rejected — root has no user systemd session, and a root daemon would split into `/root/.pboss`. Re-run it as yourself; the service runs as the invoking user and uses the same `~/.pboss` data as your daily `pboss` commands.
 
-The generated file adapts to how pboss was installed: a **compiled standalone install** (one-line installer, `build:bin`) re-executes the pboss binary itself — `ExecStart=/home/you/.local/bin/pboss __daemon` — (Bun is embedded, not required on the system); a **script install** (`bun add -g pboss`, npm) runs the source on the system Bun — `ExecStart=/home/you/.bun/bin/bun run …/daemon.ts`. The header comment states which mode was detected.
+The generated file adapts to how pboss was installed. A **compiled standalone install** (built with `build:bin` — the one-line installer installs the npm package instead) re-executes the pboss binary itself — `ExecStart=/usr/local/bin/pboss __daemon` — (Bun is embedded in the binary, not required on the system). A **package install** re-executes the same runtime that is running pboss: under Bun, `ExecStart=/home/you/.bun/bin/bun run …/dist/cli.js __daemon`; under Node, `ExecStart=/usr/bin/node …/dist/cli.js __daemon`; under Deno, `ExecStart=/home/you/.deno/bin/deno run -A …/dist/cli.js __daemon`. The header comment states which mode and runtime were detected.
 
 The service `PATH` includes the target user's `~/.bun/bin` whenever it exists (workers that shell out to `bun` by name must resolve it), and the daemon self-heals its `PATH` at startup — daemons started by older service definitions also find Bun after an upgrade. See [runtimes](/runtimes) for the full discovery chain.
 

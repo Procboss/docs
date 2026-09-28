@@ -24,19 +24,38 @@ The daemon is almost certainly already running — started at logon by the boot 
 
 The daemon auto-starts (`pboss ping` answers) but `pboss list` is empty: installs before v1.4.7 started only the daemon at logon — nothing ran the boot resurrect (the Windows twin of Linux's `ExecStartPost`). Re-run the installer or `pboss startup install` so the hidden launcher is regenerated, then reboot once more: saved processes come back at logon. If they still don't, `~\.pboss\resurrect.err.log` says why (timeout, script not found), and `pboss resurrect` restores the list manually.
 
-## "the Bun runtime was not found" — but bun IS installed
+## "no JavaScript/TypeScript runtime was found" — but one IS installed
 
-The error appears when Bun lives where the daemon cannot see it — typically `~/.bun/bin` (the default `curl bun.sh/install` location) while the daemon was started by systemd/launchd with a minimal service PATH. `which bun` works in your shell because YOUR shell has that directory on PATH; the daemon does not.
+The error fires when pboss cannot find **any** of Bun, Deno, or Node for a JS/TS worker — usually because the runtime lives where the daemon cannot see it. The typical case: the runtime is in a user bin directory (`~/.bun/bin`, `~/.deno/bin` — the default `curl`-installer locations) while the daemon was started by systemd/launchd with a minimal service PATH. `which bun` works in your shell because YOUR shell has that directory on PATH; the daemon does not.
 
-pboss searches `PATH`, `$BUN_INSTALL/bin`, `~/.bun/bin`, `/usr/local/bin`, `/usr/bin`, and `/opt/bun/bin` (plus `/opt/homebrew/bin` on macOS) — so if the error still fires, Bun genuinely is not in any of them **for the user the daemon runs as** (for example, Bun installed only for a different account). Check:
+pboss searches, per runtime: **Bun** — `PATH`, `$BUN_INSTALL/bin`, `~/.bun/bin`, `/usr/local/bin`, `/usr/bin`, `/opt/bun/bin`, and `/opt/homebrew/bin` on macOS; **Deno** — `PATH`, `~/.deno/bin`; **Node** — `PATH`, `/usr/local/bin` (plus the node running pboss itself, when pboss executes under Node). If the error still fires, no runtime is in any of them **for the user the daemon runs as** — for example, installed only for a different account. Check:
 
 ```bash
-ls -l ~/.bun/bin/bun                # the default location
-echo $BUN_INSTALL                   # set by the bun.sh installer
-pboss startup status                # whose ~/.pboss the daemon uses
+ls -l ~/.bun/bin/bun ~/.deno/bin/deno 2>/dev/null  # the default locations
+echo $BUN_INSTALL                                # set by the bun.sh installer
+pboss startup status                              # whose ~/.pboss the daemon uses
 ```
 
-Fixes, in order of preference: install Bun for the daemon's user (`curl -fsSL https://bun.sh/install | bash`), set `BUN_INSTALL` in the unit (`systemctl --user edit pboss` → `Environment=BUN_INSTALL=/opt/bun`), or pick another runtime for that process (`--interpreter node`, `--interpreter none` for binaries). After installing Bun, restart the service: `systemctl --user restart pboss`.
+Fixes, in order of preference: install any runtime for the daemon's user (Bun: `curl -fsSL https://bun.sh/install | bash`), set `BUN_INSTALL` in the unit (`systemctl --user edit pboss` → `Environment=BUN_INSTALL=/opt/bun`), or pick the interpreter explicitly for that process (`--interpreter node`, `--interpreter "deno run -A"`, `--interpreter none` for binaries). After installing a runtime, restart the service: `systemctl --user restart pboss`.
+
+## Which runtime is pboss running on?
+
+Not sure what a given machine is executing pboss with? Ask it:
+
+```bash
+pboss --runtime    # Runtime: Bun 1.3.14
+pboss runtime      # Runtime / Version / Install — three lines
+```
+
+`pboss runtime` also prints the install flavor (`package install running on the system Node.js runtime`, for example), which is what the boot-service comments record too. To run pboss under a different runtime, install it with that runtime's package manager — see [Installation](/installation).
+
+## "Unsupported runtime" error
+
+pboss executes under Bun, Node.js, and Deno — anything else (or something exotic enough to evade detection) stops with the supported list rather than silently guessing. The error names the environment it saw and the three runtimes it supports, with a URL for each. Run pboss with one of the three, and it detects which — once, at startup, honestly.
+
+## Deno: PermissionDenied when running pboss
+
+Deno is deny-by-default. A pboss shim installed without permission flags prompts in interactive terminals and fails with `PermissionDenied` in scripts, the moment pboss spawns a process or touches a file. Re-install with the permission set a process manager needs — the table and the recommended command are in [Installation](/installation#denos-permission-system).
 
 ## Process keeps restarting
 

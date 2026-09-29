@@ -20,7 +20,10 @@ pboss start server.js --interpreter node --name node-api
 pboss start server.ts --interpreter "deno run --allow-net" --name deno-api
 ```
 
-Every other stack works the same way, detected by extension — `pboss start worker.py`, `pboss start main.go`, `pboss start app.jar`, `pboss start ./my-go-server` — the full table lives in [Runtimes](/runtimes).
+<!-- 2026-09-29: multi-language support is hidden while the product focuses on JS/TS
+     backends. Re-add when it returns: "Every other stack works the same way, detected
+     by extension — `pboss start worker.py`, `pboss start main.go`, `pboss start app.jar`,
+     `pboss start ./my-go-server` — the full table lives in [Runtimes](/runtimes)." -->
 
 ## Production API with clustering and health checks
 

@@ -154,7 +154,7 @@ pboss start server.ts --name api --max-memory-restart 512M
 ```
 
 ```bash
-pboss start script.py --interpreter python3
+pboss start server.ts --interpreter "deno run -A" --name deno-api
 ```
 
 ```bash

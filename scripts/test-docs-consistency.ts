@@ -141,6 +141,7 @@ const troubleshooting = readFileSync(join(DOCS_SITE, "troubleshooting.md"), "utf
 const runtimes = readFileSync(join(DOCS_SITE, "runtimes.md"), "utf8");
 const cluster = readFileSync(join(DOCS_SITE, "cli", "cluster.md"), "utf8");
 const intro = readFileSync(join(DOCS_SITE, "intro.md"), "utf8");
+const recipes = readFileSync(join(DOCS_SITE, "recipes.md"), "utf8");
 
 // 2026-09-29: commented-out sections are not documentation — the hidden
 // universal installer must not satisfy any "is it documented" check.
@@ -234,12 +235,29 @@ ok("runtimes: tsx lookup order documented", /Your app's own `node_modules`/.test
 ok("runtimes: tsx shipped as optional dependency", runtimes.includes("optional dependency of the pboss package"));
 ok("runtimes: strip-types kept as the fallback", runtimes.includes("zero-dependency fallback"));
 ok("runtimes: explicit interpreter stays verbatim (no tsx injection)", runtimes.includes("never injects tsx"));
-// 3c-3. First-class focus: JS/TS lead, other languages limited to one
-//        compact table — the owner's positioning request.
+// 3c-3. JS/TS-only focus (2026-09-29): the product focuses on JS/TS
+//        backends — multi-language support is hidden from the docs
+//        (commented out, dated for a later re-add), like the universal
+//        installer. The first-class claim stays; the other-stack
+//        marketing must not render.
 ok("runtimes: first-class JS/TS claim", runtimes.includes("**JavaScript and TypeScript first-class treatment**"));
-ok("runtimes: other stacks compressed to one section", runtimes.includes("### Every other stack, still managed"));
+ok(
+  "rendered docs: multi-language marketing stays hidden until re-added",
+  [intro, runtimes, quickstart, recipes].every((t) => {
+    const s = stripComments(t);
+    return (
+      !s.includes("Every other stack, still managed") &&
+      !s.includes("In addition to that first-class") &&
+      !/every other language alongside/.test(s) &&
+      !/Go, Python, Rust, Ruby, PHP, Java/.test(s)
+    );
+  }),
+);
+ok(
+  "intro: JS/TS-only positioning",
+  stripComments(intro).includes("manages your JavaScript and TypeScript applications"),
+);
 ok("runtimes: per-runtime run sections exist", /### Running Bun applications/.test(runtimes) && /### Running Node\.js applications/.test(runtimes) && /### Running Deno applications/.test(runtimes));
-ok("intro: in-addition positioning (trio first, everything else after)", intro.includes("In addition to that first-class Node, Bun and Deno support"));
 ok("runtimes: pboss --runtime documented", runtimes.includes("pboss --runtime"));
 ok("cluster: per-runtime spawn table", cluster.includes("`Bun.spawn`") && cluster.includes("`node:child_process`") && cluster.includes("`Deno.Command`"));
 ok("cluster: node:cluster belongs to Node only", cluster.includes("it belongs to Node only"));

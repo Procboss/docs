@@ -57,5 +57,5 @@ This is the natural fit for twelve-factor deployments: keep `.env.production` ou
 ## Precedence and tips
 
 - Flags given to the child process after `--` and `--env` values both reach the process; explicit `--env` entries are applied to its environment.
-- Virtualenv-style per-language setups don't need env vars — see [`--interpreter`](/runtimes#custom-interpreters) for pointing at a venv binary directly.
+- Per-app runner overrides don't need env vars — see [`--interpreter`](/runtimes) for pinning a process to one runtime (e.g. `--interpreter node`).
 - For Node.js runtime flags, use `--node-args` instead of env vars: `--node-args "--max-old-space-size=4096"`.

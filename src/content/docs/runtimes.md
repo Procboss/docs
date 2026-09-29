@@ -1,6 +1,6 @@
 ---
 title: Runtimes
-description: pboss is runtime-agnostic — one package that executes natively on Bun, Node.js, or Deno through each runtime's own APIs — and manages JavaScript and TypeScript first-class, with every other language alongside.
+description: pboss is runtime-agnostic — one package that executes natively on Bun, Node.js, or Deno through each runtime's own APIs — and manages JavaScript and TypeScript first-class.
 section: getting-started
 order: 4
 ---
@@ -83,7 +83,12 @@ When you scale an app (`--instances 4`), each worker is an independent process s
 
 ## The runtimes pboss manages
 
-pboss gives **JavaScript and TypeScript first-class treatment**: Bun, Node.js, and Deno apps resolve their runner per machine — `bun run` → `deno run -A` → `node` — natively, with no interpreter configuration. In addition to that trio, pboss manages everything else on the machine — other languages, compiled binaries, and shell scripts — detected by file extension, overridable with `--interpreter`.
+pboss gives **JavaScript and TypeScript first-class treatment**: Bun, Node.js, and Deno apps resolve their runner per machine — `bun run` → `deno run -A` → `node` — natively, with no interpreter configuration.
+
+<!-- 2026-09-29: multi-language support is hidden while the product focuses on JS/TS
+     backends. Re-add when it returns: "In addition to that trio, pboss manages
+     everything else on the machine — other languages, compiled binaries, and shell
+     scripts — detected by file extension, overridable with `--interpreter`." -->
 
 ### The JS/TS interpreter chain
 
@@ -141,6 +146,10 @@ pboss start server.ts --interpreter "deno run --allow-net --allow-read" --name d
 
 The interpreter chain picks Deno automatically when Bun is absent; the explicit form above pins it and lets you choose your **app's** permission set. pboss itself under Deno is a separate question — see [Installation](/installation#denos-permission-system) for the permissions the process manager needs.
 
+<!-- 2026-09-29: multi-language support is hidden while the product focuses on JS/TS
+     backends. Re-add verbatim when it returns (keep it a single HTML comment —
+     nothing here renders).
+
 ### Every other stack, still managed
 
 Beyond the first-class trio, runners are auto-detected from the file extension — same lifecycle, same restart policies, same logs, same dashboard:
@@ -161,6 +170,8 @@ Any executable can serve as the interpreter, with arguments — including a virt
 pboss start app.ts --interpreter "deno run -A"
 pboss start script.py --interpreter python3 --interpreter-args "-u"
 ```
+
+-->
 
 ### How pboss finds the JS/TS interpreter
 

@@ -81,7 +81,7 @@ Details in [Startup scripts](/cli/startup).
 
 ## Where to go next
 
-- **First-class JS/TS, plus everything else.** pboss itself runs on Bun, Node.js, or Deno — and manages JavaScript and TypeScript natively (Bun → Deno → Node with tsx), with Go, Python, Java, and other stacks alongside — see [Runtimes](/runtimes).
+- **First-class JS/TS.** pboss itself runs on Bun, Node.js, or Deno — and manages JavaScript and TypeScript natively (Bun → Deno → Node with tsx) — see [Runtimes](/runtimes).
 - **Multiple services, one repo?** Declare them in an [ecosystem file](/cli/ecosystem).
 - **Running more instances?** Read [Cluster mode](/cli/cluster).
 - **Deploying to containers?** Use [foreground mode](/guide/docker).

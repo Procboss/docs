@@ -29,6 +29,17 @@
  *      Node's own module — never pboss's mechanism under Bun or Deno).
  *   5. The pboss DOCS.md startup status example matches the code output.
  *
+ * 2026-09-29 update: the universal (one-line) installer is HIDDEN from the
+ * docs — its sections are commented out for a later re-add — while the
+ * product focuses on JS/TS package-manager installs. Contract changes:
+ *   - checks 3's installer-path mirrors (~/.local/bin, %LOCALAPPDATA%,
+ *     PATH auto-add, "sudo is never required") are replaced by the
+ *     package-manager trio checks (bun / npm / deno -A);
+ *   - commented-out blocks are NOT documentation: every "is it documented"
+ *     assertion runs on comment-stripped text;
+ *   - one new guard: the one-line installer stays out of the rendered docs
+ *     until it is deliberately re-added.
+ *
  * Run: bun scripts/test-docs-consistency.ts   (exit 0 = all checks pass)
  */
 
@@ -126,24 +137,45 @@ for (const file of [...sitePages, ...pbossDocs]) {
 const installation = readFileSync(join(DOCS_SITE, "installation.md"), "utf8");
 const startup = readFileSync(join(DOCS_SITE, "cli", "startup.md"), "utf8");
 const quickstart = readFileSync(join(DOCS_SITE, "quickstart.md"), "utf8");
+const troubleshooting = readFileSync(join(DOCS_SITE, "troubleshooting.md"), "utf8");
 const runtimes = readFileSync(join(DOCS_SITE, "runtimes.md"), "utf8");
 const cluster = readFileSync(join(DOCS_SITE, "cli", "cluster.md"), "utf8");
 const intro = readFileSync(join(DOCS_SITE, "intro.md"), "utf8");
 
+// 2026-09-29: commented-out sections are not documentation — the hidden
+// universal installer must not satisfy any "is it documented" check.
+const stripComments = (text: string) => text.replace(/<!--[\s\S]*?-->/g, "");
+
 ok("installation: no-privileges requirement stated", /Privileges:\*\* none/.test(installation));
-ok("installation: pre-1.5.0 ~/.local/bin upgrade note", installation.includes("~/.local/bin"));
-ok("installation: PATH auto-add on the per-user dir documented", installation.includes("adds it to your `PATH` automatically"));
+ok("installation: pre-1.5.0 ~/.local/bin upgrade note", stripComments(installation).includes("~/.local/bin"));
 ok("installation: bun add -g without sudo", /```bash\nbun add -g pboss\n```/.test(installation));
 ok("installation: one-liner has no sudo", !/curl -fsSL https:\/\/procboss\.com\/install\.sh \| sudo/.test(installation));
-// The no-root target contract (owner request, 2026-09-10): "we still dont
-// need root … if ~/.local/bin is not in PATH in ~/.bashrc, then add it" —
-// the installer NEVER invokes sudo; a missing PATH entry is added to the
-// shell profile automatically instead of noted.
 ok("installation: no sudo-optional claim", !installation.includes("sudo is optional"));
 ok("installation: no PBOSS_INSTALL_DIR / PBOSS_NO_SUDO overrides", !/PBOSS_(INSTALL_DIR|NO_SUDO)/.test(installation));
-ok("pboss DOCS.md: PATH self-heal mirrored", readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes("adds it to your shell profile"));
-ok("pboss README: PATH self-heal mirrored", readFileSync(join(PBOSS, "README.md"), "utf8").includes("adds it to your shell profile"));
-ok("pboss DOCS.md: no-root contract mirrored", readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes("sudo is never required"));
+
+// The new install contract (2026-09-29, owner request): the JS/TS
+// package-manager trio — Bun, npm, Deno with -A — documented everywhere.
+ok(
+  "installation: package-manager trio documented (bun / npm / deno -A)",
+  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A npm:pboss"].every((s) =>
+    stripComments(installation).includes(s)),
+);
+ok(
+  "pboss README: package-manager trio mirrored",
+  ["bun install -g pboss", "npm install -g pboss", "deno install -g -A npm:pboss"].every((s) =>
+    readFileSync(join(PBOSS, "README.md"), "utf8").includes(s)),
+);
+ok(
+  "pboss DOCS.md: package-manager trio mirrored",
+  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A npm:pboss"].every((s) =>
+    readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes(s)),
+);
+ok(
+  "rendered docs: the one-line installer stays hidden until re-added",
+  [installation, startup, quickstart, troubleshooting].every(
+    (t) => !/procboss\.com\/install\.(sh|ps1|cmd)/.test(stripComments(t)),
+  ),
+);
 ok("startup: per-user systemd unit path", startup.includes("~/.config/systemd/user/pboss.service"));
 ok("startup: systemctl --user", startup.includes("systemctl --user"));
 ok("startup: enable-linger documented", startup.includes("loginctl enable-linger"));
@@ -163,19 +195,21 @@ for (const [name, fact] of [
 
 // ---------------------------------------------------------------------------
 // 3b. The runtime-agnostic install contract (pboss 1.5.0).
+//    2026-09-29: the one-line installer is hidden (JS/TS package-manager
+//    focus), so its checks ("never selects a runtime", the at-least-one
+//    table, "never compiles anything", the PATH auto-add) live inside the
+//    commented-out section and return with it. The Deno install now ships
+//    -A in the short form (deny-by-default runtime — the owner's request).
 // ---------------------------------------------------------------------------
 ok("installation: any-ONE-of-three runtimes requirement", /any ONE of/.test(installation));
 ok("installation: npm global install documented", /```bash\nnpm install -g pboss\n```/.test(installation));
-ok("installation: deno global install documented", /deno install -g npm:pboss/.test(installation));
+ok("installation: deno global install documented (with -A)", /deno install -g -A npm:pboss/.test(installation));
 ok("installation: deno permission section exists", installation.includes("### Deno's permission system"));
 ok("installation: deno --allow-run documented", installation.includes("`--allow-run`"));
 ok("installation: deno --allow-net documented", installation.includes("`--allow-net`"));
 ok("installation: deno recommended install with flags", installation.includes("deno install -g --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss"));
 ok("installation: deno -A short form documented", installation.includes("deno install -g -A npm:pboss"));
-ok("installation: installer never selects a runtime", installation.includes("never selects a runtime"));
 ok("installation: no runtime-preference instruction", !/set `?PBOSS_RUNTIME/i.test(installation));
-ok("installation: at-least-one runtime table", installation.includes("nothing installed, nothing selected"));
-ok("installation: published package, no compiling", /never compiles anything/.test(installation));
 ok("installation: pre-1.5.0 upgrade path documented", /pre-1\.5\.0/.test(installation));
 ok("installation: node engines floor documented", installation.includes("≥ 20.19"));
 

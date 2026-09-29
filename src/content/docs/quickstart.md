@@ -63,7 +63,7 @@ A self-contained web dashboard with live charts, process controls, and a log vie
 
 ## Survive a reboot
 
-Nothing to do — it is the default. The installer already set up the boot service, and pboss saves your process list automatically after every change. On boot, the daemon starts and resurrects your apps. The first `pboss start` tells you where persistence stands in one line, so the default is never a silent surprise.
+Nothing to do — it is the default. The install already set up the boot service, and pboss saves your process list automatically after every change. On boot, the daemon starts and resurrects your apps. The first `pboss start` tells you where persistence stands in one line, so the default is never a silent surprise.
 
 ```bash
 pboss start my-api.ts   # saved automatically, resurrected at every boot

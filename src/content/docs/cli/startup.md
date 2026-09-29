@@ -11,8 +11,13 @@ pboss sets up an OS-level boot service so the daemon starts at boot — and, bec
 
 You normally never run these commands:
 
-- The **one-line installer** (`curl -fsSL https://procboss.com/install.sh | bash`) installs the boot service as its final step — the daemon starts immediately and at every boot. Hosts without systemd (containers, minimal VMs) get a note instead of an error.
-- A **global npm install** (`npm i -g pboss`) tries the same and prints the one command to run on hosts where it could not.
+- A **package-manager install** (`bun add -g pboss`, `npm i -g pboss`) installs the boot service automatically and prints the one command to run on hosts where it could not (containers, minimal VMs).
+
+<!-- 2026-09-29: hidden with the universal installer (JS/TS package-manager focus).
+     Re-add when it returns:
+     - The **one-line installer** (`curl -fsSL https://procboss.com/install.sh | bash`) installs
+       the boot service as its final step — the daemon starts immediately and at every boot.
+       Hosts without systemd (containers, minimal VMs) get a note instead of an error. -->
 
 `pboss startup install` is for the cases the automation could not cover: you removed the service, or you are re-enabling it on a new systemd host.
 
@@ -22,7 +27,7 @@ Installs and starts the boot startup service — as your normal user, no root:
 
 - **Linux:** writes and enables a **per-user systemd unit** (`~/.config/systemd/user/pboss.service`) and drives it with `systemctl --user` — no root, no sudo. After bring-up, pboss best-effort runs `loginctl enable-linger <user>` so the daemon starts at **boot** rather than at your first login; where linger is refused (older systemd / polkit), the install still succeeds and says so. The start is `--no-block` with a hard health deadline (unit state + socket ping), so `install` always returns — a failing daemon produces a diagnosis, never a hang.
 - **macOS:** writes and loads a `launchd` LaunchAgent (`~/Library/LaunchAgents/com.pboss.daemon.plist`). No root needed or wanted — sudo is rejected with a re-run hint.
-- **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) starting the daemon at **this user's logon** via `Register-ScheduledTask`, at RunLevel **Limited** (a Highest task needs an elevated shell to register; the daemon needs only the user's token). Hosts that deny even per-user registration ("Access is denied") fall back to the **per-user Registry Run key** (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run\PBOSS_Daemon`) — same logon trigger, zero Task Scheduler permissions; the install says which mechanism was used. Only when both fail does it exit nonzero with the elevated re-run hint. The daemon is also brought up immediately (installers and `pboss upgrade` stop it before replacing the binary).
+- **Windows:** registers a Scheduled Task (`PBOSS_Daemon`) starting the daemon at **this user's logon** via `Register-ScheduledTask`, at RunLevel **Limited** (a Highest task needs an elevated shell to register; the daemon needs only the user's token). Hosts that deny even per-user registration ("Access is denied") fall back to the **per-user Registry Run key** (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run\PBOSS_Daemon`) — same logon trigger, zero Task Scheduler permissions; the install says which mechanism was used. Only when both fail does it exit nonzero with the elevated re-run hint. The daemon is also brought up immediately (`pboss upgrade` stops it before replacing the binary).
 
 On Windows, both mechanisms start the daemon through a generated hidden launcher (`~\.pboss\daemon-launch.vbs` run by `wscript.exe`), so it comes up with **no console window** — right after install and at every logon — and its output is appended to `~\.pboss\daemon.out.log` / `daemon.err.log`. The launcher then runs the boot resurrect (`pboss resurrect --wait 15`, the Windows twin of the unit's `ExecStartPost`), so saved processes come back at logon; its log — `~\.pboss\resurrect.out.log` / `resurrect.err.log` — is where to look when something did not.
 
@@ -32,7 +37,12 @@ pboss startup install
 
 Running it under `sudo` is rejected — root has no user systemd session, and a root daemon would split into `/root/.pboss`. Re-run it as yourself; the service runs as the invoking user and uses the same `~/.pboss` data as your daily `pboss` commands.
 
-The generated file adapts to how pboss was installed. A **compiled standalone install** (built with `build:bin` — the one-line installer installs the npm package instead) re-executes the pboss binary itself — `ExecStart=/usr/local/bin/pboss __daemon` — (Bun is embedded in the binary, not required on the system). A **package install** re-executes the same runtime that is running pboss: under Bun, `ExecStart=/home/you/.bun/bin/bun run …/dist/cli.js __daemon`; under Node, `ExecStart=/usr/bin/node …/dist/cli.js __daemon`; under Deno, `ExecStart=/home/you/.deno/bin/deno run -A …/dist/cli.js __daemon`. The header comment states which mode and runtime were detected.
+The generated file adapts to how pboss was installed. A **package install** re-executes the same runtime that is running pboss: under Bun, `ExecStart=/home/you/.bun/bin/bun run …/dist/cli.js __daemon`; under Node, `ExecStart=/usr/bin/node …/dist/cli.js __daemon`; under Deno, `ExecStart=/home/you/.deno/bin/deno run -A …/dist/cli.js __daemon`. The header comment states which mode and runtime were detected.
+
+<!-- 2026-09-29: hidden with the universal installer. Re-add when it returns: a **compiled
+     standalone install** (built with `build:bin` — the one-line installer installs the npm
+     package instead) re-executes the pboss binary itself — `ExecStart=/usr/local/bin/pboss
+     __daemon` — (Bun is embedded in the binary, not required on the system). -->
 
 The service `PATH` includes the target user's `~/.bun/bin` whenever it exists (workers that shell out to `bun` by name must resolve it), and the daemon self-heals its `PATH` at startup — daemons started by older service definitions also find Bun after an upgrade. See [runtimes](/runtimes) for the full discovery chain.
 
@@ -120,7 +130,7 @@ If a saved process is already running (the daemon restarted while its children s
 
 ```bash
 # the whole setup, once, at install time:
-curl -fsSL https://procboss.com/install.sh | bash
+bun add -g pboss
 
 # then just use pboss — everything is persisted from here on:
 pboss start ecosystem.config.json

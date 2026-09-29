@@ -22,7 +22,7 @@ The daemon is almost certainly already running — started at logon by the boot 
 
 ## Saved processes didn't come back after a reboot (Windows)
 
-The daemon auto-starts (`pboss ping` answers) but `pboss list` is empty: installs before v1.4.7 started only the daemon at logon — nothing ran the boot resurrect (the Windows twin of Linux's `ExecStartPost`). Re-run the installer or `pboss startup install` so the hidden launcher is regenerated, then reboot once more: saved processes come back at logon. If they still don't, `~\.pboss\resurrect.err.log` says why (timeout, script not found), and `pboss resurrect` restores the list manually.
+The daemon auto-starts (`pboss ping` answers) but `pboss list` is empty: installs before v1.4.7 started only the daemon at logon — nothing ran the boot resurrect (the Windows twin of Linux's `ExecStartPost`). Re-run `pboss startup install` so the hidden launcher is regenerated, then reboot once more: saved processes come back at logon. If they still don't, `~\.pboss\resurrect.err.log` says why (timeout, script not found), and `pboss resurrect` restores the list manually.
 
 ## "no JavaScript/TypeScript runtime was found" — but one IS installed
 

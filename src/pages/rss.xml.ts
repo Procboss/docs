@@ -51,7 +51,7 @@ export const GET: APIRoute = async () => {
     <title>${esc(siteConfig.name)}</title>
     <link>${siteConfig.url}/</link>
     <description>${esc(
-      "Documentation for ProcBoss (pboss) — the open-source, Bun-native process manager — and ProcBoss Cloud.",
+      "Documentation for ProcBoss (pboss) — the open-source process manager that runs on Bun, Node.js, or Deno — and ProcBoss Cloud.",
     )}</description>
     <language>en</language>
     <lastBuildDate>${new Date(newest).toUTCString()}</lastBuildDate>

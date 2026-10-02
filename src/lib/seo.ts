@@ -95,7 +95,7 @@ export function softwareNode() {
     softwareVersion: siteConfig.productVersion,
     url: siteConfig.links.cloud,
     description:
-      "ProcBoss (pboss) — the open-source, Bun-native universal process manager: run, cluster, monitor, and manage any application, with the optional ProcBoss Cloud layer for fleet visibility.",
+      "ProcBoss (pboss) — the open-source, runtime-agnostic process manager: runs natively on Bun, Node.js, or Deno; run, cluster, monitor, and manage any application, with the optional ProcBoss Cloud layer for fleet visibility.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     sameAs: [siteConfig.links.pboss],
   };

@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install pboss with your package manager of choice — Bun, npm, or Deno. One requirement — any single supported runtime. No root required anywhere.
+description: Install pboss with your runtime of choice — Node.js, Bun, or Deno — through the one-line installer or your package manager. The runtime is your explicit, persistent selection. No root required anywhere.
 section: getting-started
 order: 2
 ---
@@ -8,57 +8,58 @@ order: 2
 ## Requirements
 
 - **Platforms:** Linux, macOS, and Windows.
-- **Runtimes — any ONE of:** [Bun](https://bun.sh) (≥ 1.0), [Node.js](https://nodejs.org) (≥ 20.19), or [Deno](https://deno.com) (2.x recommended). pboss is runtime-agnostic: it executes under whichever one you already have, through that runtime's native APIs. Having two or three is fine too — nothing conflicts, nothing gets chosen.
+- **Runtimes — any ONE of:** [Node.js](https://nodejs.org) (≥ 20.19), [Bun](https://bun.sh) (≥ 1.0), or [Deno](https://deno.com) (2.x recommended). pboss is runtime-agnostic: it executes under whichever one of the three you **select**, through that runtime's native APIs. Having two or three is fine too — nothing conflicts, your selection decides.
 - **Privileges:** none. No root, no `sudo`, no Administrator — anywhere: not for installing, not for the boot service.
-
-<!-- 2026-09-29: the one-line universal installer is commented out while the
-     product focuses on JS/TS package-manager installs. Re-add verbatim when
-     it returns (keep it a single HTML comment — nothing here renders).
 
 ## One-line install
 
-The universal installer's only runtime-related job is to make sure **at least one supported runtime exists**:
+The universal installer makes **you** choose the runtime — it never guesses from whatever happens to be installed:
 
-| What it finds | What it does |
+| What you give it | What it does |
 |---|---|
-| Bun, Node, or Deno (any one, or several) | nothing — nothing installed, nothing selected |
-| none of the three | installs Bun (the only runtime side effect it ever has) |
+| `--runtime=node`, `--runtime=bun`, or `--runtime=deno` | uses exactly that runtime — installs the runtime itself when missing, then installs the published pboss package through that runtime's package ecosystem |
+| nothing (interactive) | asks which runtime to use — Node is the default; pressing Enter selects it |
+| nothing, no terminal (CI, scripts) | stops and asks you to re-run with an explicit `--runtime` — never a silent fallback |
 
-It then installs the **published pboss package, globally** — `bun install -g pboss`, `npm install -g pboss`, or `deno install -g -A npm:pboss`, whichever package manager is available — and sets up the per-user boot service. The `pboss` command lands in the package manager's bin directory (`~/.bun/bin`, the npm prefix, or `~/.deno/bin`), and the installer adds it to your `PATH` automatically when missing. No root required on any platform.
+Your choice is **saved** to `~/.pboss/.runtime` (`%USERPROFILE%\.pboss\.runtime` on Windows) — a plain-text, single-word file that every later `pboss` invocation, and every upgrade, reads back. It never lives inside the package directory, so updating pboss never resets it.
 
-The installer never selects a runtime, never persists a preference (there is no `PBOSS_RUNTIME` to set), and never compiles anything — no git clone, no toolchain. Which runtime executes pboss is decided at run time by the `pboss` command you invoke, and the installer ends by printing it: `Executing runtime: Bun 1.3.14` (for example).
+The interactive prompt looks like this:
+
+```text
+Kindly select your runtime:
+
+  1. Node
+  2. Bun
+  3. Deno
+
+Select runtime [1]:
+```
 
 **Linux / macOS:**
 
 ```bash
-curl -fsSL https://procboss.com/install.sh | bash
+curl -fsSL https://procboss.com/install.sh | sh
 ```
 
-**Windows (PowerShell):**
+Select the runtime up front instead of being asked:
+
+```bash
+curl -fsSL https://procboss.com/install.sh | sh -s -- --runtime=node
+curl -fsSL https://procboss.com/install.sh | sh -s -- --runtime=bun
+curl -fsSL https://procboss.com/install.sh | sh -s -- --runtime=deno
+```
+
+**Windows (PowerShell, no Administrator needed):**
 
 ```powershell
 powershell -c "irm https://procboss.com/install.ps1 | iex"
 ```
 
-**Windows (Command Prompt):**
-
-```cmd
-curl -fsSL https://procboss.com/install.cmd | cmd
-```
-
--->
+The installer also accepts `-Runtime node|bun|deno` on the PowerShell command line, sets up the per-user boot service, and adds the install directory to your `PATH` when missing.
 
 ## Install with your package manager of choice
 
-Prefer to install pboss yourself? The same published package works everywhere — pick the runtime you already use. Every method below is a global install and sets up nothing beyond the `pboss` command; the per-user boot service comes with `pboss startup install`.
-
-### Bun
-
-```bash
-bun add -g pboss
-```
-
-If you don't have Bun yet: `curl -fsSL https://bun.sh/install | bash` (Linux/macOS) or `powershell -c "irm bun.sh/install.ps1 | iex"` (Windows). The `pboss` shim lands in `~/.bun/bin`. Update later with `bun update -g pboss`.
+Prefer to install pboss yourself? The same published package works everywhere — install it with the package manager of the runtime it should run under. The first `pboss` invocation then asks you to pick the runtime once (or set it immediately with `pboss --runtime=<node|bun|deno> --version`) and saves the answer. Every method below is a global install and sets up nothing beyond the `pboss` command; the per-user boot service comes with `pboss startup install`.
 
 ### Node.js (npm)
 
@@ -68,13 +69,25 @@ npm install -g pboss
 
 The `pboss` shim lands in npm's global bin directory — `%APPDATA%\npm` on Windows, or the prefix `npm config get prefix` reports on Linux/macOS. On machines where that prefix is root-owned and you are not root, do it by hand with `npm config set prefix ~/.npm-global`. Update later with `npm install -g pboss@latest`.
 
+> **Windows note:** npm links `pboss` as a small shell wrapper. On plain Windows (cmd or PowerShell without Git Bash on `PATH`), use the [PowerShell installer](#one-line-install) instead — it writes native `pboss.cmd` / `pboss.ps1` shims into the package manager's bin directory. With Git Bash on `PATH`, the npm-installed wrapper runs as-is.
+
+### Bun
+
+```bash
+bun add -g pboss
+```
+
+If you don't have Bun yet: `curl -fsSL https://bun.sh/install | bash` (Linux/macOS) or `powershell -c "irm bun.sh/install.ps1 | iex"` (Windows). The `pboss` shim lands in `~/.bun/bin`. Update later with `bun update -g pboss`.
+
 ### Deno
 
 ```bash
-deno install -g -A npm:pboss
+deno install -g -A --name pboss npm:pboss/deno-entry
 ```
 
-The `pboss` shim lands in `~/.deno/bin`. Deno is **deny-by-default** — a fresh install without permission flags will prompt (or fail, in scripts) the moment pboss touches the filesystem, network, or a child process. Grant what a process manager needs at install time — see the next section.
+The `pboss` shim lands in `~/.deno/bin`. Deno executes npm package bins as **modules**, so a shell wrapper cannot serve the Deno path — the `/deno-entry` subpath hands Deno the JavaScript entrypoint (`dist/cli.deno.js`) directly, and `--name pboss` puts the command on your `PATH`.
+
+Deno is **deny-by-default** — a fresh install without permission flags will prompt (or fail, in scripts) the moment pboss touches the filesystem, network, or a child process. Grant what a process manager needs at install time — see the next section.
 
 ### Deno's permission system
 
@@ -92,13 +105,13 @@ Deno's security model requires every capability to be granted explicitly. pboss 
 The recommended install grants exactly that set:
 
 ```bash
-deno install -g --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss
+deno install -g --name pboss --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss/deno-entry
 ```
 
 Or the short form that grants all of the above at once:
 
 ```bash
-deno install -g -A npm:pboss
+deno install -g -A --name pboss npm:pboss/deno-entry
 ```
 
 Things worth knowing:
@@ -106,7 +119,7 @@ Things worth knowing:
 - **Prompts vs. scripts.** A missing permission triggers an interactive prompt in a terminal, but a hard `PermissionDenied` error when stdin is not a TTY (cron, systemd, CI). A process manager is headless by nature — grant at install time.
 - **The daemon runs with full access anyway.** When pboss starts its daemon under Deno, it re-executes it with `deno run -A`, because supervising arbitrary applications needs every capability. The flags above are what your interactive `pboss` CLI calls need.
 - **Scoping is possible but tight.** `--allow-read=$HOME/.pboss`-style restrictions work mechanically, but pboss legitimately reads ecosystem files wherever your apps live and needs the whole environment for child inheritance — scope only on machines you fully control, and expect to widen later.
-- **One-off use, no install:** `deno run -A npm:pboss <command>` (same permissions, nothing on PATH).
+- **One-off use, no install:** `deno run -A npm:pboss list` (same permissions, nothing on PATH).
 
 ### Run without installing
 
@@ -129,30 +142,39 @@ bun install
 bun run src/index.ts --version
 ```
 
-Bun is pboss's **development toolchain** (tests, bundling, the compiled-binary builds) — having it as the toolchain does not make it the runtime you must run in production. `bun run ./scripts/build-dist.ts` produces the same `dist/cli.js` the npm package ships, which also executes directly under Node (`node dist/cli.js`) and Deno (`deno run -A dist/cli.js`).
+Bun is pboss's **development toolchain** (tests, bundling, the compiled-binary builds) — having it as the toolchain does not make it the runtime you must run in production. `bun run ./scripts/build-dist.ts` produces the bundle the npm package ships, which also executes directly under Node (`node dist/cli.node.js`) and Deno (`deno run -A dist/cli.deno.js`).
+
+## The runtime selection
+
+`pboss` never guesses a runtime from whatever happens to be installed — the runtime is **your** explicit, persistent choice, stored in `~/.pboss/.runtime`:
+
+- **First run** — if nothing is configured yet, `pboss` asks once (interactive terminals only) and saves the answer. On a machine with no selection and no terminal, pass the flag explicitly: `pboss --runtime=bun --version`.
+- **`--runtime=<node|bun|deno>`** — run one invocation under a runtime. When nothing is configured yet it *initializes* the persistent selection; when a different runtime is configured it overrides for that invocation only — the CLI says so and keeps the file untouched.
+- **`pboss runtime`** — show the configured runtime, the executing engine, and how pboss was installed.
+- **`pboss runtime change`** — switch permanently: interactive, installs the new runtime when missing, installs/updates the published pboss package for it, and only then flips the selection (a failure keeps the old one).
+
+The `pboss` command itself is a small shell/PowerShell wrapper (`bin/pboss.sh` / `bin/pboss.ps1`) that reads the selection and dispatches to that runtime's own entrypoint — so a Bun-only machine works without Node anywhere, and `pboss runtime change` is all it takes to switch. The wrapper needs no JavaScript runtime to start, which is exactly how it can be the one binary npm links for every runtime mix.
 
 ## Verify the installation
 
 ```bash
 pboss --version
-pboss --runtime
+pboss runtime
 ```
 
-`--runtime` reports the runtime actually executing pboss right now — `Runtime: Node.js 24.21.0`, for example. For the full picture, `pboss runtime` adds the runtime version and how pboss was installed. If the command is not found, make sure the install directory is on your `PATH`: `~/.bun/bin` (Bun), npm's global bin directory (npm), or `~/.deno/bin` (Deno) — a new terminal is usually all it takes.
+`pboss runtime` reports the configured runtime, the one actually executing pboss right now, and the install mode — `Runtime: Node.js 24.21.0` plus two more lines, for example. If the command is not found, make sure the install directory is on your `PATH`: `~/.bun/bin` (Bun), npm's global bin directory (npm), or `~/.deno/bin` (Deno) — a new terminal is usually all it takes.
 
 ## Updating
 
 | Method | Update command |
 |---|---|
-| Bun global | `bun update -g pboss` |
+| One-line installer | re-run the same `curl -fsSL https://procboss.com/install.sh \| sh` command |
 | npm global | `npm install -g pboss@latest` |
-| Deno global | `deno install -g -A npm:pboss` |
+| Bun global | `bun update -g pboss` |
+| Deno global | `deno install -g -f -A --name pboss npm:pboss/deno-entry` |
 | From source | `git pull && bun install && bun run ./scripts/build-dist.ts` |
 
-<!-- 2026-09-29: hidden with the universal installer. Re-add when it returns:
-     | One-line installer | re-run the same `curl -fsSL https://procboss.com/install.sh \| bash` command | -->
-
-Or just run `pboss upgrade` — it detects how pboss was installed and updates through the same channel.
+Or just run `pboss upgrade` — it resolves the update channel **from your configured runtime** (npm for Node, `bun update -g` for Bun, the Deno subpath with `-f` for Deno) and updates through it. The selection itself (`~/.pboss/.runtime`) is never touched by any update path.
 
 **Upgrading from a pre-1.5.0 one-line install?** Older installers compiled a standalone binary into `~/.local/bin` (or `/usr/local/bin`). `pboss upgrade` re-runs the installer for you and switches the machine to the published package. Afterwards, `which -a pboss` shows every `pboss` on PATH; remove any leftover compiled copy so the package install wins.
 

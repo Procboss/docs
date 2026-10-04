@@ -17,11 +17,11 @@ order: 1
 
 ## Runtime-agnostic, not runtime-generic
 
-One published package, three runtimes. `npm install -g pboss`, `bun add -g pboss`, or `deno install -g npm:pboss` all deliver the same CLI — and the runtime that executes it is the one you already have:
+One published package, three runtimes. `npm install -g pboss`, `bun add -g pboss`, or `deno install -g -A --name pboss npm:pboss/deno-entry` all deliver the same CLI — and the runtime that executes it is **your** selection:
 
-- **No runtime is forced on you.** Any one of Bun, Node.js, or Deno is enough. The installer never selects a runtime, and no preference is ever persisted — the executing runtime is detected at run time, every run.
+- **No runtime is forced on you.** Any one of Bun, Node.js, or Deno is enough. You pick it once — at install time or on first run — and the choice is saved in `~/.pboss/.runtime`; the `pboss` wrapper reads it back every run and dispatches to that runtime's own entrypoint. `pboss runtime change` switches it any time.
 - **Native performance and features, per runtime.** Under Bun, pboss supervises with `Bun.spawn`, serves the dashboard with `Bun.serve`, reads files with `Bun.file`. Under Node, it is `node:child_process`, `node:http`, and `node:fs/promises`. Under Deno, `Deno.Command`, `Deno.serve`, and the `Deno.*` file APIs. Nothing is routed through another runtime's compatibility layer.
-- **Detected once, reported honestly.** The runtime is identified exactly once at startup; `pboss --runtime` tells you the truth on demand.
+- **Selected by you, reported honestly.** `pboss runtime` tells you the configured selection and the engine actually executing on demand.
 - **Same features everywhere.** Process lifecycle, cluster mode, logs, health checks, cron restarts, watch mode, the dashboard, and Prometheus metrics behave identically under all three runtimes.
 
 See [Runtimes](/runtimes) for the full architecture — the adapter layer, the detection order, and the native API map.

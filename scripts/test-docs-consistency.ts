@@ -40,6 +40,23 @@
  *   - one new guard: the one-line installer stays out of the rendered docs
  *     until it is deliberately re-added.
  *
+ * 2026-10-04 update (pboss 1.6.0): the one-line installer RETURNS as the
+ *    recommended path — runtime-aware, per the Universal Runtime-Aware
+ *    Installation & CLI Architecture. The selection contract inverts:
+ *   - the runtime is the user's explicit, persistent choice
+ *     (~/.pboss/.runtime — a plain single-word file, never inside the
+ *     package directory);
+ *   - the installer takes --runtime=node|bun|deno (or asks; Node default)
+ *     and installs the selected runtime when missing;
+ *   - the Deno command is the /deno-entry subpath with --name pboss
+ *     (deno executes npm package bins as modules — a shell wrapper
+ *     cannot serve that path);
+ *   - `pboss --runtime` as an info command is gone — the info lives in
+ *     `pboss runtime`; the bare flag is now a usage error;
+ *   - the old "never selects a runtime / no preference is ever persisted"
+ *     claims are stale and must not render;
+ *   - updates resolve the channel from the configured runtime.
+ *
  * Run: bun scripts/test-docs-consistency.ts   (exit 0 = all checks pass)
  */
 
@@ -154,28 +171,33 @@ ok("installation: one-liner has no sudo", !/curl -fsSL https:\/\/procboss\.com\/
 ok("installation: no sudo-optional claim", !installation.includes("sudo is optional"));
 ok("installation: no PBOSS_INSTALL_DIR / PBOSS_NO_SUDO overrides", !/PBOSS_(INSTALL_DIR|NO_SUDO)/.test(installation));
 
-// The new install contract (2026-09-29, owner request): the JS/TS
-// package-manager trio — Bun, npm, Deno with -A — documented everywhere.
+// The install contract: the JS/TS package-manager trio — Bun, npm, Deno
+// (subpath form) — documented everywhere, with the runtime-aware one-line
+// installer as the recommended path (pboss 1.6.0).
 ok(
-  "installation: package-manager trio documented (bun / npm / deno -A)",
-  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A npm:pboss"].every((s) =>
+  "installation: package-manager trio documented (bun / npm / deno subpath)",
+  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A --name pboss npm:pboss/deno-entry"].every((s) =>
     stripComments(installation).includes(s)),
 );
 ok(
   "pboss README: package-manager trio mirrored",
-  ["bun install -g pboss", "npm install -g pboss", "deno install -g -A npm:pboss"].every((s) =>
+  ["bun install -g pboss", "npm install -g pboss", "deno install -g -A --name pboss npm:pboss/deno-entry"].every((s) =>
     readFileSync(join(PBOSS, "README.md"), "utf8").includes(s)),
 );
 ok(
   "pboss DOCS.md: package-manager trio mirrored",
-  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A npm:pboss"].every((s) =>
+  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A --name pboss npm:pboss/deno-entry"].every((s) =>
     readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes(s)),
 );
 ok(
-  "rendered docs: the one-line installer stays hidden until re-added",
-  [installation, startup, quickstart, troubleshooting].every(
-    (t) => !/procboss\.com\/install\.(sh|ps1|cmd)/.test(stripComments(t)),
-  ),
+  "installation: the one-line installer is the recommended path (1.6.0)",
+  stripComments(installation).includes("curl -fsSL https://procboss.com/install.sh | sh") &&
+    stripComments(installation).includes("powershell -c \"irm https://procboss.com/install.ps1 | iex\""),
+);
+ok(
+  "installation: installer --runtime= flag forms documented",
+  ["--runtime=node", "--runtime=bun", "--runtime=deno"].every((s) =>
+    stripComments(installation).includes(s)),
 );
 ok("startup: per-user systemd unit path", startup.includes("~/.config/systemd/user/pboss.service"));
 ok("startup: systemctl --user", startup.includes("systemctl --user"));
@@ -195,24 +217,46 @@ for (const [name, fact] of [
 }
 
 // ---------------------------------------------------------------------------
-// 3b. The runtime-agnostic install contract (pboss 1.5.0).
-//    2026-09-29: the one-line installer is hidden (JS/TS package-manager
-//    focus), so its checks ("never selects a runtime", the at-least-one
-//    table, "never compiles anything", the PATH auto-add) live inside the
-//    commented-out section and return with it. The Deno install now ships
-//    -A in the short form (deny-by-default runtime — the owner's request).
+// 3b. The runtime-agnostic install contract (pboss 1.5.0 → 1.6.0).
+//    2026-10-04: the one-line installer RETURNS runtime-aware (pboss 1.6.0)
+//    — it takes --runtime=node|bun|deno or asks (Node default), installs
+//    the selected runtime when missing, installs the published package
+//    through that runtime's ecosystem, and persists the selection. The
+//    Deno install ships the /deno-entry subpath with --name pboss (deno
+//    executes npm package bins as modules — a shell wrapper cannot serve
+//    that path).
 // ---------------------------------------------------------------------------
 ok("installation: any-ONE-of-three runtimes requirement", /any ONE of/.test(installation));
 ok("installation: npm global install documented", /```bash\nnpm install -g pboss\n```/.test(installation));
-ok("installation: deno global install documented (with -A)", /deno install -g -A npm:pboss/.test(installation));
+ok("installation: deno global install documented (subpath + --name)", /deno install -g -A --name pboss npm:pboss\/deno-entry/.test(installation));
 ok("installation: deno permission section exists", installation.includes("### Deno's permission system"));
 ok("installation: deno --allow-run documented", installation.includes("`--allow-run`"));
 ok("installation: deno --allow-net documented", installation.includes("`--allow-net`"));
-ok("installation: deno recommended install with flags", installation.includes("deno install -g --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss"));
-ok("installation: deno -A short form documented", installation.includes("deno install -g -A npm:pboss"));
+ok("installation: deno recommended install with flags", installation.includes("deno install -g --name pboss --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss/deno-entry"));
+ok("installation: deno -A short form documented", installation.includes("deno install -g -A --name pboss npm:pboss/deno-entry"));
 ok("installation: no runtime-preference instruction", !/set `?PBOSS_RUNTIME/i.test(installation));
 ok("installation: pre-1.5.0 upgrade path documented", /pre-1\.5\.0/.test(installation));
 ok("installation: node engines floor documented", installation.includes("≥ 20.19"));
+
+// ---------------------------------------------------------------------------
+// 3d. The runtime-selection contract (pboss 1.6.0): the runtime is the
+//     user's explicit, persistent choice — the wrapper dispatches, and
+//     updates follow the selection.
+// ---------------------------------------------------------------------------
+ok("installation: the persistent selection file documented", stripComments(installation).includes("~/.pboss/.runtime"));
+ok("installation: the selection never lives in the package directory", stripComments(installation).includes("never lives inside the package directory"));
+ok("installation: pboss runtime change documented", stripComments(installation).includes("pboss runtime change"));
+ok("installation: --runtime=<x> semantics documented", stripComments(installation).includes("--runtime=<node|bun|deno>"));
+ok("installation: first-run interactive ask documented", stripComments(installation).includes("asks once"));
+ok("installation: updates resolve the channel from the configured runtime", stripComments(installation).includes("resolves the update channel"));
+ok("installation: the wrapper dispatch story told", stripComments(installation).includes("bin/pboss.sh"));
+ok("installation: no stale 'installer never selects' claim", !stripComments(installation).includes("never selects a runtime"));
+ok("installation: no stale 'never persists a preference' claim", !stripComments(installation).includes("never persists"));
+ok("runtimes: the persistent selection documented", stripComments(runtimes).includes("~/.pboss/.runtime"));
+ok("runtimes: no stale 'no preference is ever persisted' claim", !stripComments(runtimes).includes("no preference is ever persisted"));
+ok("intro: the selection story told", stripComments(intro).includes("~/.pboss/.runtime"));
+ok("troubleshooting: invalid runtime configuration entry", troubleshooting.includes("Invalid ProcBoss runtime configuration"));
+ok("troubleshooting: the bare --runtime info command is gone", !stripComments(troubleshooting).includes("pboss --runtime"));
 
 // ---------------------------------------------------------------------------
 // 3c. The runtime-agnostic architecture contract.
@@ -258,7 +302,7 @@ ok(
   stripComments(intro).includes("manages your JavaScript and TypeScript applications"),
 );
 ok("runtimes: per-runtime run sections exist", /### Running Bun applications/.test(runtimes) && /### Running Node\.js applications/.test(runtimes) && /### Running Deno applications/.test(runtimes));
-ok("runtimes: pboss --runtime documented", runtimes.includes("pboss --runtime"));
+ok("runtimes: pboss runtime documented (1.6.0 — bare --runtime is a usage error)", runtimes.includes("pboss runtime"));
 ok("cluster: per-runtime spawn table", cluster.includes("`Bun.spawn`") && cluster.includes("`node:child_process`") && cluster.includes("`Deno.Command`"));
 ok("cluster: node:cluster belongs to Node only", cluster.includes("it belongs to Node only"));
 ok("cluster: reusePort guidance kept", cluster.includes("reusePort"));

@@ -43,15 +43,24 @@ Fixes, in order of preference: install any runtime for the daemon's user (Bun: `
 Not sure what a given machine is executing pboss with? Ask it:
 
 ```bash
-pboss --runtime    # Runtime: Bun 1.3.14
-pboss runtime      # Runtime / Version / Install — three lines
+pboss runtime      # Configured / Executing / Install — the full picture
 ```
 
-`pboss runtime` also prints the install flavor (`package install running on the system Node.js runtime`, for example), which is what the boot-service comments record too. To run pboss under a different runtime, install it with that runtime's package manager — see [Installation](/installation).
+`pboss runtime` also prints the install flavor (`package install running on the system Node.js runtime`, for example), which is what the boot-service comments record too. To run pboss under a different runtime — on this invocation or permanently — see the selection semantics in [Installation](/installation#the-runtime-selection): `--runtime=<x>` overrides one invocation, `pboss runtime change` switches the persistent selection (installing the new runtime and package for you).
 
 ## "Unsupported runtime" error
 
 pboss executes under Bun, Node.js, and Deno — anything else (or something exotic enough to evade detection) stops with the supported list rather than silently guessing. The error names the environment it saw and the three runtimes it supports, with a URL for each. Run pboss with one of the three, and it detects which — once, at startup, honestly.
+
+## "Invalid ProcBoss runtime configuration" error
+
+`~/.pboss/.runtime` holds your selection — one lowercase word: `node`, `bun`, or `deno`. If the file exists but contains anything else (a hand edit gone wrong, a corrupted write), pboss refuses to guess: it stops with this error and the supported list, on every entry point — the wrapper, the installer, and `runtime change` all validate against the same list. Fix it by writing the word back:
+
+```bash
+echo node > ~/.pboss/.runtime    # or bun, or deno
+```
+
+Or delete the file and pick again on the next run — pboss asks once, the same first-run prompt.
 
 ## Deno: PermissionDenied when running pboss
 

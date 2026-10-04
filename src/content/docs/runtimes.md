@@ -15,7 +15,7 @@ The principle in one line: **ProcBoss is runtime-agnostic, not runtime-generic.*
 
 ### One package, three runtimes
 
-The same npm package — installed with `bun add -g pboss`, `npm install -g pboss`, or `deno install -g npm:pboss` — is what every runtime executes. Nothing about your machine is baked in at install time: the runtime is detected when the `pboss` command runs, every run. Several runtimes coexisting is not a conflict, and no preference is ever persisted.
+The same npm package — installed with `npm install -g pboss`, `bun add -g pboss`, or `deno install -g -A --name pboss npm:pboss/deno-entry` — is what every runtime executes. Which one that is, is **your explicit, persistent selection**: the installer asks (or takes `--runtime=`), the first `pboss` run asks, and the answer is saved in `~/.pboss/.runtime`. Several runtimes coexisting is not a conflict — the selection decides, and `pboss runtime change` switches it.
 
 ### The adapter layer
 
@@ -60,7 +60,7 @@ The core (process management, clustering, logs, monitoring, the dashboard) never
 
 ### Detection: once, in this order
 
-The runtime is identified by what it **is**, not by which compatibility APIs happen to be reachable:
+Inside a running pboss, the executing runtime is identified by what it **is**, not by which compatibility APIs happen to be reachable — the selection already decided which entrypoint launched (the wrapper dispatches to `dist/cli.node.js`, `cli.bun.js`, or `cli.deno.js`); detection tells the core which adapter to load:
 
 1. **Bun** — the `Bun` global. Bun also exposes `process.versions.node` (full Node compatibility), so a Node-first check would misclassify every Bun as a Node.
 2. **Deno** — the `Deno` global. Deno's node-compat layer provides `process` for npm packages, so it too must be checked before Node.
@@ -71,11 +71,10 @@ Anything else fails immediately with the supported list — Bun, Node.js, Deno �
 ### Which runtime is executing pboss?
 
 ```bash
-pboss --runtime    # Runtime: Bun 1.3.14
-pboss runtime      # Runtime / Version / Install — the full picture
+pboss runtime      # Configured / Executing / Install — the full picture
 ```
 
-Both report the truth at the moment you ask. `pboss runtime` adds the install flavor (for example, `package install running on the system Node.js runtime`), which is also what the boot-service comments record on install.
+`pboss runtime` reports the configured selection and the engine actually executing pboss right now, plus the install flavor (for example, `package install running on the system Node.js runtime`), which is also what the boot-service comments record on install. `--runtime=<x>` runs one invocation under another runtime; `pboss runtime change` switches the selection permanently.
 
 ### Cluster mode is native per runtime, too
 

@@ -91,6 +91,8 @@ deno install -g -A --name pboss npm:pboss/deno-entry
 
 The `pboss` shim lands in `~/.deno/bin`. Deno executes npm package bins as **modules**, so a shell wrapper cannot serve the Deno path — the `/deno-entry` subpath hands Deno the JavaScript entrypoint (`dist/cli.deno.js`) directly, and `--name pboss` puts the command on your `PATH`.
 
+**Deno's 24-hour supply-chain hold.** Deno refuses npm versions published within the last day: an unpinned spec silently installs the *previous* release right after we publish, and an exact pin of a fresh version errors with `Could not find npm package`. Pin yesterday's version explicitly (`npm:pboss@<version>/deno-entry`) or use the universal installer, which resolves the newest installable version itself. `pboss upgrade` honors the same window and says when the newest release lands.
+
 Deno is **deny-by-default** — a fresh install without permission flags will prompt (or fail, in scripts) the moment pboss touches the filesystem, network, or a child process. Grant what a process manager needs at install time — see the next section.
 
 ### Deno's permission system
@@ -187,7 +189,7 @@ Manual commands for Linux and macOS, for when you maintain the install yourself:
 | One-line installer | re-run the same `curl -fsSL https://procboss.com/install.sh \| sh` command |
 | npm global | `npm install -g pboss@latest` |
 | Bun global | `bun update -g pboss` |
-| Deno global | `deno install -g -f -A --name pboss npm:pboss/deno-entry` |
+| Deno global | `deno install -g -f -A --name pboss npm:pboss@<newest-resolvable>/deno-entry` (the supply-chain pin) |
 | From source | `git pull && bun install && bun run ./scripts/build-dist.ts` |
 
 **Upgrading from a pre-1.5.0 one-line install?** Older installers compiled a standalone binary into `~/.local/bin` (or `/usr/local/bin`). `pboss upgrade` re-runs the installer for you and switches the machine to the published package. Afterwards, `which -a pboss` shows every `pboss` on PATH; remove any leftover compiled copy so the package install wins.

@@ -62,6 +62,12 @@ echo node > ~/.pboss/.runtime    # or bun, or deno
 
 Or delete the file and pick again on the next run — pboss asks once, the same first-run prompt.
 
+## Bun: "refusing to install dependency with unsafe name"
+
+Every `bun install -g` (or `bun add -g`) failing with this error — for pboss or any other package — is a corrupted **Bun global state**, not a broken package. The tell is the message plus a warning like `Duplicate key "" in object literal at bun.lock:8:9`. The cause: a `bun add -g .` was run from inside a package directory at some point (a common way to test a local package), leaving a nameless (`""`) entry in Bun's global `package.json`; from Bun 1.4 on, every later global install refuses until the state is healed.
+
+The one-line installer detects and heals this automatically before installing. To fix it by hand, edit `%USERPROFILE%\.bun\install\global\package.json` (Linux/macOS: `~/.bun/install/global/package.json`), delete the empty-name line — it looks like `"": "./"` — and delete `bun.lock` in the same directory, then re-run your install. Nothing else in the file needs to change; Bun regenerates the lockfile on the next install. For a one-off without installing anything: `bunx --bun pboss --version`.
+
 ## Deno: PermissionDenied when running pboss
 
 Deno is deny-by-default. A pboss shim installed without permission flags prompts in interactive terminals and fails with `PermissionDenied` in scripts, the moment pboss spawns a process or touches a file. Re-install with the permission set a process manager needs — the table and the recommended command are in [Installation](/installation#denos-permission-system).

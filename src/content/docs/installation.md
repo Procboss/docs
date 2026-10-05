@@ -57,6 +57,8 @@ powershell -c "irm https://procboss.com/install.ps1 | iex"
 
 The installer also accepts `-Runtime node|bun|deno` on the PowerShell command line, sets up the per-user boot service, and adds the install directory to your `PATH` when missing.
 
+> **On Windows, install through the one-line installer — and update only with `pboss upgrade`.** npm and Bun link the `pboss` command as a small shell-script wrapper, which cmd and PowerShell cannot execute natively; the installer writes real `pboss.cmd` / `pboss.ps1` shims instead, and `pboss upgrade` re-heals them after every update. Package-manager updates skip that step — see [Updating](#updating).
+
 ## Install with your package manager of choice
 
 Prefer to install pboss yourself? The same published package works everywhere — install it with the package manager of the runtime it should run under. The first `pboss` invocation then asks you to pick the runtime once (or set it immediately with `pboss --runtime=<node|bun|deno> --version`) and saves the answer. Every method below is a global install and sets up nothing beyond the `pboss` command; the per-user boot service comes with `pboss startup install`.
@@ -77,7 +79,9 @@ The `pboss` shim lands in npm's global bin directory — `%APPDATA%\npm` on Wind
 bun add -g pboss
 ```
 
-If you don't have Bun yet: `curl -fsSL https://bun.sh/install | bash` (Linux/macOS) or `powershell -c "irm bun.sh/install.ps1 | iex"` (Windows). The `pboss` shim lands in `~/.bun/bin`. Update later with `bun update -g pboss`.
+If you don't have Bun yet: `curl -fsSL https://bun.sh/install | bash` (Linux/macOS) or `powershell -c "irm bun.sh/install.ps1 | iex"` (Windows). The `pboss` shim lands in `~/.bun/bin`.
+
+Seeing `error: refusing to install dependency with unsafe name` from Bun? That is a corrupted Bun global state — it breaks every `bun install -g`, not just pboss's — and it has a fix: see [Troubleshooting](/troubleshooting). The one-line installer heals it automatically before installing.
 
 ### Deno
 
@@ -166,6 +170,18 @@ pboss runtime
 
 ## Updating
 
+The one blessed path, every platform and install method:
+
+```bash
+pboss upgrade
+```
+
+It resolves the update channel **from your configured runtime** (npm for Node, `bun update -g` for Bun, the Deno subpath with `-f` for Deno) and updates through it. The selection itself (`~/.pboss/.runtime`) is never touched by any update path, and on Windows the native `pboss.cmd` / `pboss.ps1` shims are re-healed after the update — the command keeps working.
+
+> **On Windows, `pboss upgrade` is the only supported way to update.** npm and Bun regenerate their own shims when they update the package — wrappers that cmd and PowerShell cannot run. `pboss upgrade` repairs them afterwards; a raw `npm install -g pboss@latest` or `bun update -g pboss` does not, and the `pboss` command breaks.
+
+Manual commands for Linux and macOS, for when you maintain the install yourself:
+
 | Method | Update command |
 |---|---|
 | One-line installer | re-run the same `curl -fsSL https://procboss.com/install.sh \| sh` command |
@@ -173,8 +189,6 @@ pboss runtime
 | Bun global | `bun update -g pboss` |
 | Deno global | `deno install -g -f -A --name pboss npm:pboss/deno-entry` |
 | From source | `git pull && bun install && bun run ./scripts/build-dist.ts` |
-
-Or just run `pboss upgrade` — it resolves the update channel **from your configured runtime** (npm for Node, `bun update -g` for Bun, the Deno subpath with `-f` for Deno) and updates through it. The selection itself (`~/.pboss/.runtime`) is never touched by any update path.
 
 **Upgrading from a pre-1.5.0 one-line install?** Older installers compiled a standalone binary into `~/.local/bin` (or `/usr/local/bin`). `pboss upgrade` re-runs the installer for you and switches the machine to the published package. Afterwards, `which -a pboss` shows every `pboss` on PATH; remove any leftover compiled copy so the package install wins.
 

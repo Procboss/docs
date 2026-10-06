@@ -9,7 +9,7 @@ export const siteConfig = {
   name: "ProcBoss Docs",
   /** The product: runtime-agnostic process manager — runs on Bun, Node.js, or Deno. */
   product: "pboss",
-  productVersion: "v1.5.0",
+  productVersion: "v1.6.6",
   /** Links out. */
   links: {
     /** Open-source CLI repo. */

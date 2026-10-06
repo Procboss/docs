@@ -15,7 +15,7 @@ The principle in one line: **ProcBoss is runtime-agnostic, not runtime-generic.*
 
 ### One package, three runtimes
 
-The same npm package — installed with `npm install -g pboss`, `bun add -g pboss`, or `deno install -g -A --name pboss npm:pboss/deno-entry` — is what every runtime executes. Which one that is, is **your explicit, persistent selection**: the installer asks (or takes `--runtime=`), the first `pboss` run asks, and the answer is saved in `~/.pboss/.runtime`. Several runtimes coexisting is not a conflict — the selection decides, and `pboss runtime change` switches it.
+The same npm package — installed with `npm install -g pboss`, `bun add -g pboss`, or `deno install -g -A --min-dep-age=0 --name pboss --reload --force npm:pboss/deno-entry` — is what every runtime executes. Which one that is, is **your explicit, persistent selection**: the installer asks (or takes `--runtime=`), the first `pboss` run asks, and the answer is saved in `~/.pboss/.runtime`. Several runtimes coexisting is not a conflict — the selection decides, and `pboss runtime change` switches it.
 
 ### The adapter layer
 
@@ -139,11 +139,16 @@ A machine with only Node installed runs every JS/TS app on Node — TypeScript i
 # Deno runs your app with full permissions by default (deno run -A)
 pboss start server.ts --interpreter "deno run -A" --name deno-api
 
-# Narrow your app's permissions with a custom interpreter
-pboss start server.ts --interpreter "deno run --allow-net --allow-read" --name deno-api
+# Or state WHAT the app may do — the runtime-unique --permissions flag
+pboss start server.ts --interpreter deno --permissions allow-net,allow-read=./config
+
+# A zero-permission Deno app (the -A default is dropped, nothing replaces it)
+pboss start worker.ts --interpreter deno --perms none
 ```
 
-The interpreter chain picks Deno automatically when Bun is absent; the explicit form above pins it and lets you choose your **app's** permission set. pboss itself under Deno is a separate question — see [Installation](/installation#denos-permission-system) for the permissions the process manager needs.
+The interpreter chain picks Deno automatically when Bun is absent; the explicit forms above pin it. `--permissions` (short form `--perms`) is **Deno only** — the one pboss runtime with a permission model gets a first-class option, silently ignored under Bun and Node. There is deliberately no single-letter alias — `-p` is already `--port` (PM2 parity), and a `-P`/`-p` typo would silently set the port. pboss itself under Deno is a separate question — see [Installation](/installation#denos-permission-system) for the permissions the process manager needs.
+
+Entries are `allow-<category>` / `deny-<category>` with an optional `=value` scoping (`allow-net=api.example.com`, `allow-env=FOO,BAR`), plus `all` (`-A`) and `none`; categories: `read`, `write`, `net`, `env`, `run`, `sys`, `ffi`, `hrtime`. The same list lives in ecosystem files as `permissions: ["allow-net", "deny-write"]`, and a permission already stated in `--interpreter-args` is never duplicated.
 
 <!-- 2026-09-29: multi-language support is hidden while the product focuses on JS/TS
      backends. Re-add verbatim when it returns (keep it a single HTML comment —

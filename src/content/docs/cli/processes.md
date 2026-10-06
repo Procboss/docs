@@ -174,6 +174,7 @@ Arguments after `--` are passed through to your script. The same set of options 
 | `--env <KEY=VAL>` | Environment variable (repeatable) | — |
 | `--interpreter <bin>` | Custom interpreter binary | Auto-detected |
 | `--interpreter-args <args>` | Arguments for the interpreter | — |
+| `--permissions, --perms <list>` | **Deno only** (runtime-unique — ignored under Bun/Node): comma-separated permission list, e.g. `allow-read,allow-net=api.com,deny-write`; `all` = `-A`, `none` = no permissions | — |
 | `--node-args <args>` | Additional runtime arguments | — |
 | `--max-memory-restart <size>` | Restart when memory exceeds limit | — |
 | `--max-restarts <n>` | Maximum consecutive restarts | `16` |

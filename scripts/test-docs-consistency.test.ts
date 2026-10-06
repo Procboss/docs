@@ -57,7 +57,26 @@
  *     claims are stale and must not render;
  *   - updates resolve the channel from the configured runtime.
  *
- * Run: bun scripts/test-docs-consistency.ts   (exit 0 = all checks pass)
+ * 2026-10-06 update (pboss 1.6.6, owner spec verbatim): ONE canonical Deno
+ *    command everywhere — `deno install -g -A --min-dep-age=0 --name pboss
+ *    --reload --force npm:pboss/deno-entry` (the install command plus
+ *    --reload --force; the same command installs, reinstalls, and
+ *    upgrades in place). Contract:
+ *   - the canonical command is IDENTICAL on every surface that shows it
+ *     (installation.md, intro.md, runtimes.md, pboss README.md, pboss
+ *     DOCS.md) — no variant spellings;
+ *   - --min-dep-age=0 rides every Deno install/one-off form (Deno ≥ 2.9's
+ *     escape hatch for the 24-hour supply-chain hold; the unpinned spec
+ *     resolves the release just published);
+ *   - `pboss upgrade` displays and executes the same unpinned command
+ *     under the bypass; the universal installer pins the exact version
+ *     it installs instead;
+ *   - the one-off `deno run` uses the /deno-entry subpath (the wrapper
+ *     bin is a shell script — running it as a module is a SyntaxError);
+ *   - the runtime-unique --permissions/--perms start flag is documented
+ *     (runtimes.md + the processes.md options table).
+ *
+ * Run: bun scripts/test-docs-consistency.test.ts   (exit 0 = all checks pass)
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -66,6 +85,11 @@ import { join, dirname } from "node:path";
 const HERE = dirname(import.meta.path);
 const DOCS_SITE = join(HERE, "..", "src", "content", "docs");
 const PBOSS = join(HERE, "..", "..", "pboss");
+
+/** The ONE canonical Deno install/upgrade command (owner spec, 2026-10-06) —
+ *  identical on every surface, no variant spellings anywhere. */
+const CANONICAL_DENO =
+  "deno install -g -A --min-dep-age=0 --name pboss --reload --force npm:pboss/deno-entry";
 
 let passed = 0;
 const failures: string[] = [];
@@ -159,6 +183,9 @@ const runtimes = readFileSync(join(DOCS_SITE, "runtimes.md"), "utf8");
 const cluster = readFileSync(join(DOCS_SITE, "cli", "cluster.md"), "utf8");
 const intro = readFileSync(join(DOCS_SITE, "intro.md"), "utf8");
 const recipes = readFileSync(join(DOCS_SITE, "recipes.md"), "utf8");
+const processes = readFileSync(join(DOCS_SITE, "cli", "processes.md"), "utf8");
+const pbossReadme = readFileSync(join(PBOSS, "README.md"), "utf8");
+const pbossDocsMd = readFileSync(join(PBOSS, "DOCS.md"), "utf8");
 
 // 2026-09-29: commented-out sections are not documentation — the hidden
 // universal installer must not satisfy any "is it documented" check.
@@ -172,22 +199,22 @@ ok("installation: no sudo-optional claim", !installation.includes("sudo is optio
 ok("installation: no PBOSS_INSTALL_DIR / PBOSS_NO_SUDO overrides", !/PBOSS_(INSTALL_DIR|NO_SUDO)/.test(installation));
 
 // The install contract: the JS/TS package-manager trio — Bun, npm, Deno
-// (subpath form) — documented everywhere, with the runtime-aware one-line
-// installer as the recommended path (pboss 1.6.0).
+// (canonical subpath form) — documented everywhere, with the runtime-aware
+// one-line installer as the recommended path (pboss 1.6.0).
 ok(
-  "installation: package-manager trio documented (bun / npm / deno subpath)",
-  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A --name pboss npm:pboss/deno-entry"].every((s) =>
+  "installation: package-manager trio documented (bun / npm / canonical deno)",
+  ["bun add -g pboss", "npm install -g pboss", CANONICAL_DENO].every((s) =>
     stripComments(installation).includes(s)),
 );
 ok(
   "pboss README: package-manager trio mirrored",
-  ["bun install -g pboss", "npm install -g pboss", "deno install -g -A --name pboss npm:pboss/deno-entry"].every((s) =>
-    readFileSync(join(PBOSS, "README.md"), "utf8").includes(s)),
+  ["bun install -g pboss", "npm install -g pboss", CANONICAL_DENO].every((s) =>
+    pbossReadme.includes(s)),
 );
 ok(
   "pboss DOCS.md: package-manager trio mirrored",
-  ["bun add -g pboss", "npm install -g pboss", "deno install -g -A --name pboss npm:pboss/deno-entry"].every((s) =>
-    readFileSync(join(PBOSS, "DOCS.md"), "utf8").includes(s)),
+  ["bun add -g pboss", "npm install -g pboss", CANONICAL_DENO].every((s) =>
+    pbossDocsMd.includes(s)),
 );
 ok(
   "installation: the one-line installer is the recommended path (1.6.0)",
@@ -228,12 +255,14 @@ for (const [name, fact] of [
 // ---------------------------------------------------------------------------
 ok("installation: any-ONE-of-three runtimes requirement", /any ONE of/.test(installation));
 ok("installation: npm global install documented", /```bash\nnpm install -g pboss\n```/.test(installation));
-ok("installation: deno global install documented (subpath + --name)", /deno install -g -A --name pboss npm:pboss\/deno-entry/.test(installation));
+ok("installation: deno global install is the canonical command", installation.includes(CANONICAL_DENO));
 ok("installation: deno permission section exists", installation.includes("### Deno's permission system"));
 ok("installation: deno --allow-run documented", installation.includes("`--allow-run`"));
 ok("installation: deno --allow-net documented", installation.includes("`--allow-net`"));
-ok("installation: deno recommended install with flags", installation.includes("deno install -g --name pboss --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss/deno-entry"));
-ok("installation: deno -A short form documented", installation.includes("deno install -g -A --name pboss npm:pboss/deno-entry"));
+ok("installation: deno recommended install carries the hold bypass + refresh flags", installation.includes(
+  "deno install -g --min-dep-age=0 --name pboss --reload --force --allow-run --allow-read --allow-write --allow-net --allow-env --allow-sys npm:pboss/deno-entry",
+));
+ok("installation: deno -A short form is the canonical command", installation.includes(CANONICAL_DENO));
 ok("installation: no runtime-preference instruction", !/set `?PBOSS_RUNTIME/i.test(installation));
 ok("installation: pre-1.5.0 upgrade path documented", /pre-1\.5\.0/.test(installation));
 ok("installation: node engines floor documented", installation.includes("≥ 20.19"));
@@ -257,6 +286,57 @@ ok("runtimes: no stale 'no preference is ever persisted' claim", !stripComments(
 ok("intro: the selection story told", stripComments(intro).includes("~/.pboss/.runtime"));
 ok("troubleshooting: invalid runtime configuration entry", troubleshooting.includes("Invalid ProcBoss runtime configuration"));
 ok("troubleshooting: the bare --runtime info command is gone", !stripComments(troubleshooting).includes("pboss --runtime"));
+
+// ---------------------------------------------------------------------------
+// 3e. The canonical Deno command contract (pboss 1.6.6, owner spec
+//     2026-10-06): ONE command everywhere — the install command plus
+//     --reload --force, the hold bypassed, the unpinned spec.
+// ---------------------------------------------------------------------------
+ok(
+  "canonical deno command: identical on all five surfaces",
+  [stripComments(installation), stripComments(intro), stripComments(runtimes), pbossReadme, pbossDocsMd].every((t) =>
+    t.includes(CANONICAL_DENO)),
+  "expected in installation.md, intro.md, runtimes.md, pboss README.md, pboss DOCS.md",
+);
+ok(
+  "canonical deno command: no stale pre-1.6.6 spelling anywhere on the site",
+  sitePages.every((f) => !readFileSync(f, "utf8").includes("deno install -g -A --name pboss npm:pboss/deno-entry")),
+);
+ok(
+  "installation: supply-chain hold names the escape hatch",
+  stripComments(installation).includes("--min-dep-age=0") &&
+    stripComments(installation).includes("24-hour supply-chain hold"),
+);
+ok(
+  "installation: no stale 'pin yesterday's version' advice",
+  !stripComments(installation).includes("Pin yesterday's version"),
+);
+ok(
+  "installation: the hold-bypass flag rides the update table's deno row",
+  /Deno global \| `deno install -g -A --min-dep-age=0 --name pboss --reload --force npm:pboss\/deno-entry`/.test(installation),
+);
+ok(
+  "installation: the --reload/--force doctrine stated (same command installs, reinstalls, upgrades)",
+  stripComments(installation).includes("installs, reinstalls, and upgrades in place"),
+);
+ok(
+  "installation: installer pins, upgrade runs unpinned — the distinction survives",
+  stripComments(installation).includes("the installer pins the exact version it installs"),
+);
+ok(
+  "installation: one-off deno run uses the subpath + hold bypass",
+  stripComments(installation).includes("deno run -A --min-dep-age=0 npm:pboss/deno-entry list"),
+);
+// The runtime-unique --permissions start flag (pboss 1.6.2): runtimes.md
+// sells it, the processes.md options table carries the row.
+ok(
+  "runtimes: the runtime-unique --permissions flag documented",
+  stripComments(runtimes).includes("--perms") && stripComments(runtimes).includes("**Deno only**"),
+);
+ok(
+  "processes: --permissions row in the start options table",
+  processes.includes("`--permissions, --perms <list>`"),
+);
 
 // ---------------------------------------------------------------------------
 // 3c. The runtime-agnostic architecture contract.
@@ -323,7 +403,6 @@ for (const [name, claim] of staleClaims) {
 // ---------------------------------------------------------------------------
 // 5. pboss DOCS.md example matches the implemented status() output.
 // ---------------------------------------------------------------------------
-const pbossDocsMd = readFileSync(join(PBOSS, "DOCS.md"), "utf8");
 ok("pboss DOCS.md: per-user status header", pbossDocsMd.includes("# Boot startup service (systemd, per-user)"));
 ok("pboss DOCS.md: Linger line in status example", pbossDocsMd.includes("#   Linger:     on — the daemon starts at BOOT, before login"));
 ok("pboss DOCS.md: linger guidance present", pbossDocsMd.includes("loginctl enable-linger $USER"));

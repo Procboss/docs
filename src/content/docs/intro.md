@@ -17,7 +17,7 @@ order: 1
 
 ## Runtime-agnostic, not runtime-generic
 
-One published package, three runtimes. `npm install -g pboss`, `bun add -g pboss`, or `deno install -g -A --name pboss npm:pboss/deno-entry` all deliver the same CLI — and the runtime that executes it is **your** selection:
+One published package, three runtimes. `npm install -g pboss`, `bun add -g pboss`, or `deno install -g -A --min-dep-age=0 --name pboss --reload --force npm:pboss/deno-entry` all deliver the same CLI — and the runtime that executes it is **your** selection:
 
 - **No runtime is forced on you.** Any one of Bun, Node.js, or Deno is enough. You pick it once — at install time or on first run — and the choice is saved in `~/.pboss/.runtime`; the `pboss` wrapper reads it back every run and dispatches to that runtime's own entrypoint. `pboss runtime change` switches it any time.
 - **Native performance and features, per runtime.** Under Bun, pboss supervises with `Bun.spawn`, serves the dashboard with `Bun.serve`, reads files with `Bun.file`. Under Node, it is `node:child_process`, `node:http`, and `node:fs/promises`. Under Deno, `Deno.Command`, `Deno.serve`, and the `Deno.*` file APIs. Nothing is routed through another runtime's compatibility layer.

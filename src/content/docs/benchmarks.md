@@ -6,7 +6,7 @@ order: 4
 ---
 
 pboss is measured against pm2 (and, for Deno apps, against
-[pup](https://github.com/igalklebanov/pup)) in a dedicated benchmark repo —
+[pup](https://github.com/hexagon/pup)) in a dedicated benchmark repo —
 [github.com/Procboss/benchmarks](https://github.com/Procboss/benchmarks) —
 with three editions, one per runtime: a **Bun** HTTP server, a **Node**
 HTTP server, and a **Deno** HTTP server. The method is the same in all
